@@ -1,0 +1,54 @@
+services:
+    mysql:
+        # MySQL 8.4 LTS 官方镜像
+        # MySQL 8.4.9（标准季度更新版，极度成熟）
+        image: mysql:8.4.9
+        container_name: mysql
+        restart: unless-stopped
+
+        # 应用容器通过 app-network 网络用 mysql:3306 直连
+        # 如需从宿主机本地管理，取消下行注释（仅绑定 127.0.0.1）
+        # Navicat需要
+        ports:
+          - "127.0.0.1:3306:3306"
+
+        environment:
+            # 时区
+            TZ: Asia/Shanghai
+            # root 密码
+            MYSQL_ROOT_PASSWORD: "Azh501azh"
+
+        volumes:
+            # 数据持久化（最关键的挂载）
+            - /data/mysql/data:/var/lib/mysql
+            # 配置文件目录 → 容器内 MySQL 会自动读取 conf.d 下的 .cnf 文件
+            - /data/mysql/conf:/etc/mysql/conf.d
+            # 日志目录
+            - /data/mysql/log:/var/log/mysql
+            # 初始化脚本（仅首次启动执行）
+            - /data/mysql/init:/docker-entrypoint-initdb.d
+            # 同步宿主机时区到容器
+            - /etc/localtime:/etc/localtime:ro
+
+        # 加入共享网络，使所有应用容器能通过容器名 mysql 访问
+        networks:
+            - app-network
+
+        # 健康检查：docker compose 能据此判断 MySQL 是否就绪
+        healthcheck:
+            test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 30s
+
+        # 日志限制，防止日志文件无限增长占满磁盘
+        logging:
+            driver: json-file
+            options:
+                max-size: "10m"
+                max-file: "3"
+
+networks:
+    app-network:
+        external: true

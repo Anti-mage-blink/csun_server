@@ -1,0 +1,28 @@
+.layout {
+  min-height: 100vh;
+}
+
+.logo {
+  height: 56px;
+  line-height: 56px;
+  text-align: center;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.header {
+  padding: 0 24px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+}
+
+.content {
+  margin: 16px;
+  padding: 24px;
+  background: #fff;
+  border-radius: 8px;
+  min-height: 360px;
+}

@@ -1,0 +1,34 @@
+# 本地编译产物（Windows 下 go build 产生的 .exe 等）
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+quotemanage-backend
+quotemanage-backend.exe
+
+# 测试与覆盖率
+*.test
+*.out
+coverage.txt
+coverage.html
+
+# Git / CI / IDE
+.git
+.gitignore
+.github
+.gitlab-ci.yml
+.idea
+.vscode
+*.swp
+*.swo
+
+# Docker 自身文件无需进入构建上下文
+Dockerfile
+.dockerignore
+.docker/
+
+# 本地数据 / 日志
+*.log
+*.tmp
+data/

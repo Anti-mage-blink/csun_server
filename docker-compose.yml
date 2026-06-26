@@ -1,0 +1,91 @@
+# =============================================================================
+# csun_server 应用栈编排文件（用于 CI/CD 部署）
+# -----------------------------------------------------------------------------
+# 仅编排「前端 + 后端」两个应用容器。
+# MySQL 8.4 已由 server/docker-compose.yml 独立部署，二者通过外部网络
+# app-network 互通（后端以容器名 mysql 连接数据库）。
+#
+# 前置条件：
+#   1. 已创建共享网络：docker network create app-network
+#   2. MySQL 容器（server/docker-compose.yml）已启动且健康
+#   3. （可选）在同级目录创建 .env 覆盖默认密码等敏感信息
+#      示例：MYSQL_ROOT_PASSWORD=your_password
+#
+# 常用命令：
+#   docker compose up -d --build            # 构建并后台启动
+#   docker compose up -d --build backend    # 仅重建后端
+#   docker compose logs -f                  # 查看日志
+#   docker compose down                     # 停止并移除容器
+# =============================================================================
+
+services:
+  # ----------------------------------------------------------------------- 后端
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: csun_server-backend:latest
+    container_name: csun_server-backend
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+      # —— 数据库连接（MySQL 容器名 mysql，位于 app-network）——
+      # 当前 main.go 尚未接入 DB，以下为后续业务模块预留，库名与
+      # server/init.sql 中创建的 quote_manage 库保持一致。
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_USER: root
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD:-Azh501azh}
+      DB_NAME: quote_manage
+    # 仅在内部网络暴露，不映射到宿主机；前端 nginx 通过 /api/ 反代访问。
+    # 如需本地调试，取消下行注释（仅绑定 127.0.0.1）。
+    # ports:
+    #   - "127.0.0.1:8080:8080"
+    expose:
+      - "8080"
+    networks:
+      - app-network
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ----------------------------------------------------------------------- 前端
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: csun_server-frontend:latest
+    container_name: csun_server-frontend
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+    ports:
+      # 宿主机访问入口。若服务器上存在多个应用系统共用 80 端口，
+      # 请改为独立端口（如 8088:80）或置于边缘反向代理之后。
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    # nginx:alpine 自带 wget，可用于健康检查
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# =============================================================================
+# 共享外部网络：由 server/docker-compose.yml 同样引用，
+# 需提前手动创建 -> docker network create app-network
+# =============================================================================
+networks:
+  app-network:
+    external: true
