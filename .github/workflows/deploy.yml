@@ -1,0 +1,157 @@
+# =============================================================
+# csun_server CI/CD 部署工作流
+# -------------------------------------------------------------
+# 触发条件：push 到 main 分支
+# 部署策略：按路径过滤，前端/后端分别按需部署
+# 部署方式：SSH 远程连接服务器执行部署脚本
+# =============================================================
+
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+# 同一时间只允许一个部署任务运行，避免并发冲突
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # ============================================================
+  # Job 1：检测变更路径
+  # ============================================================
+  detect-changes:
+    name: 检测变更路径
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
+      should_deploy: ${{ steps.check.outputs.should_deploy }}
+    steps:
+      - name: Checkout 代码
+        uses: actions/checkout@v4
+
+      - name: 路径过滤
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            frontend:
+              - 'frontend/**'
+            backend:
+              - 'backend/**'
+            # docker-compose.yml 变更时同时部署前后端
+            compose:
+              - 'docker-compose.yml'
+
+      - name: 汇总部署标记
+        id: check
+        run: |
+          FRONTEND="${{ steps.filter.outputs.frontend == 'true' || steps.filter.outputs.compose == 'true' }}"
+          BACKEND="${{ steps.filter.outputs.backend == 'true' || steps.filter.outputs.compose == 'true' }}"
+
+          # 转换为布尔字符串
+          if [ "$FRONTEND" = "true" ]; then FRONTEND="true"; else FRONTEND="false"; fi
+          if [ "$BACKEND" = "true" ]; then BACKEND="true"; else BACKEND="false"; fi
+
+          echo "frontend=$FRONTEND" >> $GITHUB_OUTPUT
+          echo "backend=$BACKEND" >> $GITHUB_OUTPUT
+
+          if [ "$FRONTEND" = "true" ] || [ "$BACKEND" = "true" ]; then
+            echo "should_deploy=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_deploy=false" >> $GITHUB_OUTPUT
+          fi
+
+  # ============================================================
+  # Job 2：SSH 远程部署
+  # ============================================================
+  deploy:
+    name: SSH 远程部署
+    needs: detect-changes
+    if: needs.detect-changes.outputs.should_deploy == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 执行部署
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          # 脚本传入环境变量，控制部署哪些服务
+          envs: DEPLOY_FRONTEND,DEPLOY_BACKEND,DEPLOY_PATH
+          script: |
+            set -e
+
+            DEPLOY_FRONTEND="${{ needs.detect-changes.outputs.frontend }}"
+            DEPLOY_BACKEND="${{ needs.detect-changes.outputs.backend }}"
+
+            echo "=========================================="
+            echo "  csun_server CI/CD 部署开始"
+            echo "  时间: $(date '+%Y-%m-%d %H:%M:%S')"
+            echo "  前端部署: $DEPLOY_FRONTEND"
+            echo "  后端部署: $DEPLOY_BACKEND"
+            echo "=========================================="
+
+            cd ${{ secrets.DEPLOY_PATH }}
+
+            # ---------- 步骤1：拉取最新代码 ----------
+            echo "[1/4] 拉取最新代码..."
+            git pull origin main
+            echo "✓ 代码拉取完成"
+
+            # ---------- 步骤2：停止对应容器 ----------
+            if [ "$DEPLOY_FRONTEND" = "true" ]; then
+              echo "[2/4] 停止前端容器..."
+              docker compose stop frontend || true
+              echo "✓ 前端容器已停止"
+            fi
+
+            if [ "$DEPLOY_BACKEND" = "true" ]; then
+              echo "[2/4] 停止后端容器..."
+              docker compose stop backend || true
+              echo "✓ 后端容器已停止"
+            fi
+
+            # ---------- 步骤3：构建镜像 ----------
+            if [ "$DEPLOY_FRONTEND" = "true" ]; then
+              echo "[3/4] 构建前端镜像..."
+              docker compose build frontend
+              echo "✓ 前端镜像构建完成"
+            fi
+
+            if [ "$DEPLOY_BACKEND" = "true" ]; then
+              echo "[3/4] 构建后端镜像..."
+              docker compose build backend
+              echo "✓ 后端镜像构建完成"
+            fi
+
+            # ---------- 步骤4：启动容器 ----------
+            if [ "$DEPLOY_FRONTEND" = "true" ]; then
+              echo "[4/4] 启动前端容器..."
+              docker compose up -d frontend
+              echo "✓ 前端容器已启动"
+            fi
+
+            if [ "$DEPLOY_BACKEND" = "true" ]; then
+              echo "[4/4] 启动后端容器..."
+              docker compose up -d backend
+              echo "✓ 后端容器已启动"
+            fi
+
+            # ---------- 清理旧镜像 ----------
+            echo "清理悬空镜像..."
+            docker image prune -f
+            echo "✓ 清理完成"
+
+            # ---------- 状态检查 ----------
+            echo ""
+            echo "=========================================="
+            echo "  当前容器状态:"
+            echo "=========================================="
+            docker compose ps
+            echo ""
+            echo "✓ 部署完成！"
