@@ -1,22 +1,43 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
+	_ "github.com/go-sql-driver/mysql"
 )
 
+// initDB 从环境变量读取连接参数并建立 MySQL 连接
+func initDB() *sql.DB {
+	dsn := os.Getenv("DB_USER") + ":" + os.Getenv("DB_PASSWORD") +
+		"@tcp(" + os.Getenv("DB_HOST") + ":" + os.Getenv("DB_PORT") + ")/" +
+		os.Getenv("DB_NAME") + "?charset=utf8mb4&parseTime=true&loc=Local"
+	d, err := sql.Open("mysql", dsn)
+	if err != nil {
+		log.Fatalf("sql.Open 失败: %v", err)
+	}
+	if err := d.Ping(); err != nil {
+		log.Fatalf("数据库 Ping 失败: %v", err)
+	}
+	return d
+}
+
 func main() {
+	db := initDB()
+	defer db.Close()
+
 	// gin.Default() 创建一个带 Logger 与 Recovery 中间件的引擎
 	r := gin.Default()
 
 	// 根路由：返回 JSON 格式的 Hello World
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
-			"message": "Hello, World!",
+			"message":   "Hello, World!",
 			"framework": "Gin v1.12.0",
-			"go": "1.26",
+			"go":        "1.26",
 		})
 	})
 
@@ -24,6 +45,46 @@ func main() {
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "pong",
+		})
+	})
+
+	// 查询 quote_manage 数据库的所有数据表名
+	r.GET("/tables", func(c *gin.Context) {
+		rows, err := db.Query("SHOW TABLES")
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error":   "查询表失败",
+				"detail":  err.Error(),
+				"success": false,
+			})
+			return
+		}
+		defer rows.Close()
+
+		var tables []string
+		for rows.Next() {
+			var name string
+			if err := rows.Scan(&name); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"error":   "读取表名失败",
+					"detail":  err.Error(),
+					"success": false,
+				})
+				return
+			}
+			tables = append(tables, name)
+		}
+
+		// 确保 tables 为 nil 时返回空数组而非 null
+		if tables == nil {
+			tables = []string{}
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"database": os.Getenv("DB_NAME"),
+			"tables":   tables,
+			"count":    len(tables),
+			"success":  true,
 		})
 	})
 

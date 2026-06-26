@@ -29,8 +29,9 @@ services:
     restart: unless-stopped
     environment:
       TZ: Asia/Shanghai
+      # GIN_MODE: release
       # —— 数据库连接（MySQL 容器名 mysql，位于 app-network）——
-      # 当前 main.go 尚未接入 DB，以下为后续业务模块预留，库名与
+      # main.go 通过这些环境变量连接 MySQL，库名与
       # server/init.sql 中创建的 quote_manage 库保持一致。
       DB_HOST: mysql
       DB_PORT: "3306"
