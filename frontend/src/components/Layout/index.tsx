@@ -28,7 +28,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   return (
     <Layout className={styles.layout}>
       <Sider>
-        <div className={styles.logo}>报价管理系统</div>
+        <div className={styles.logo}>报价管理系统 v2</div>
         <Menu
           theme="dark"
           mode="inline"
