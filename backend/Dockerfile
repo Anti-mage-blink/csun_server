@@ -2,6 +2,10 @@
 
 FROM golang:1.26.2 AS builder
 WORKDIR /src
+
+# 设置 Go 代理，解决国内服务器拉取依赖超时的问题
+ENV GOPROXY=https://goproxy.cn,direct
+
 COPY go.mod go.sum ./
 RUN --mount=type=cache,target=/go/pkg/mod \
     go mod download
