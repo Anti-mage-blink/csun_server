@@ -5,4 +5,8 @@
 已经做好了：
     Docker和Docker Compose
     容器化部署MySQL8.4.9、Navicat成功连接
+    写好并跑通了前端和后端框架的hello world
+    Github建立了仓库，已将本地代码推送至Github
+还没做：
+    在服务器上拉取代码、分别构建前后端镜像、启动容器
 
