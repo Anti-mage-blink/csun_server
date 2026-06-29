@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 
-FROM golang:1.26.2 AS builder
+FROM golang:1.26.4 AS builder
 WORKDIR /src
 
 # 设置 Go 代理，解决国内服务器拉取依赖超时的问题

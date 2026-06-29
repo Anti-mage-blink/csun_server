@@ -47,6 +47,7 @@ server/data/
 
 # ===== Go =====
 backend/tmp/
+backend/cmd/
 
 # ===== Vite 缓存 =====
 frontend/.vite/

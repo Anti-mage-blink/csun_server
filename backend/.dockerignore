@@ -27,6 +27,7 @@ coverage.html
 Dockerfile
 .dockerignore
 .docker/
+cmd/
 
 # 本地数据 / 日志
 *.log
