@@ -19,4 +19,18 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    // 单个 chunk 超过 500KB 时给出警告，这里放宽到 1500KB 以避免 antd 等大依赖触发告警
+    chunkSizeWarningLimit: 1500,
+    rollupOptions: {
+      output: {
+        // 将第三方依赖拆分到独立 chunk，便于浏览器缓存
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'antd-vendor': ['antd', '@ant-design/icons'],
+          'utils-vendor': ['axios', 'zustand'],
+        },
+      },
+    },
+  },
 })

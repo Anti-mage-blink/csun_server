@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Form, Input, Button, Modal, Select, message, notification } from 'antd'
 import { UserOutlined, LockOutlined, CheckCircleOutlined } from '@ant-design/icons'
 import { loginApi, getUsersListApi, submitForgotPasswordApi } from '@/api/auth'
