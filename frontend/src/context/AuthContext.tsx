@@ -1,7 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
-import { type User } from '@/types/gorm-models'
 
-export type { User }
+export interface User {
+  id: number
+  username: string
+  role: string
+  wecomId?: string
+}
 
 interface AuthContextType {
   user: User | null
@@ -12,25 +16,11 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-// 模拟员工表数据（对应 backend/dao/model/general/employee.gen.go 中的 Employee 结构）
-const DEFAULT_EMPLOYEES = [
-  { id: 1, employee_number: 'EMP001', name: '张三（管理员）', department: '管理部' },
-  { id: 2, employee_number: 'EMP002', name: '李四（商务员）', department: '商务部' },
-  { id: 3, employee_number: 'EMP003', name: '王五（报价员）', department: '报价部' },
-]
-
-// 模拟账户表数据（对应 backend/dao/model/general/account.gen.go 中的 Account 结构，通过 employee_id 关联 Employee）
-const DEFAULT_ACCOUNTS = [
-  { id: 1, employee_id: 1, username: 'admin', password: '123456' },
-  { id: 2, employee_id: 2, username: 'sales1', password: '123456' },
-  { id: 3, employee_id: 3, username: 'sales2', password: '123456' },
-]
-
-// 模拟报价员工表数据（对应 backend/dao/model/quote_manage/quote_employee.gen.go 结构）
-const DEFAULT_QUOTE_EMPLOYEES = [
-  { id: 1, employee_id: 1, role: '管理员' },
-  { id: 2, employee_id: 2, role: '商务员' },
-  { id: 3, employee_id: 3, role: '报价员' },
+// 初始模拟用户数据，如果本地没有则初始化
+const DEFAULT_USERS = [
+  { id: 1, username: 'admin', password: '123456', role: '管理员', wecomId: 'admin_wecom' },
+  { id: 2, username: 'sales1', password: '123456', role: '商务员', wecomId: 'sales1_wecom' },
+  { id: 3, username: 'sales2', password: '123456', role: '报价员', wecomId: 'sales2_wecom' },
 ]
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -38,30 +28,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // 初始化本地存储的模拟数据库表，铺垫给未来的多表关联和登录逻辑
-    if (!localStorage.getItem('sys_employees')) {
-      localStorage.setItem('sys_employees', JSON.stringify(DEFAULT_EMPLOYEES))
-    }
-    if (!localStorage.getItem('sys_accounts')) {
-      localStorage.setItem('sys_accounts', JSON.stringify(DEFAULT_ACCOUNTS))
-    }
-    if (!localStorage.getItem('sys_quote_employees')) {
-      localStorage.setItem('sys_quote_employees', JSON.stringify(DEFAULT_QUOTE_EMPLOYEES))
-    }
-
-    // 同时初始化并保持原有的 sys_users 兼容层，保证原有密码重置申请逻辑能平滑运行
+    // 初始化本地存储的模拟用户，铺垫给未来的重置密码和登录功能
     if (!localStorage.getItem('sys_users')) {
-      const legacyUsers = DEFAULT_ACCOUNTS.map(acc => {
-        const qEmp = DEFAULT_QUOTE_EMPLOYEES.find(q => q.employee_id === acc.employee_id)
-        return {
-          id: acc.id,
-          username: acc.username,
-          password: acc.password,
-          role: qEmp ? qEmp.role : '普通员工',
-          wecomId: undefined
-        }
-      })
-      localStorage.setItem('sys_users', JSON.stringify(legacyUsers))
+      localStorage.setItem('sys_users', JSON.stringify(DEFAULT_USERS))
     }
     
     // 初始化密码重置请求列表

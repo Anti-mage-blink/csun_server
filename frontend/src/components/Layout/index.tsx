@@ -52,12 +52,8 @@ const AppLayout = ({ children }: AppLayoutProps) => {
               <Space className={styles.userText}>
                 <UserOutlined />
                 <span>欢迎您，</span>
-                <span className={styles.username}>
-                  {user.name || user.account?.username || '未命名员工'}
-                </span>
-                <span className={styles.roleTag}>
-                  {user.quote_employee?.role || '普通员工'}
-                </span>
+                <span className={styles.username}>{user.username}</span>
+                <span className={styles.roleTag}>{user.role}</span>
               </Space>
               
               <Popconfirm

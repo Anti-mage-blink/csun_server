@@ -34,7 +34,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         login(res.data.user, res.data.token)
         
         // 如果是管理员登录，提醒有待处理的密码重置申请（完全对标原 HTML 中的系统逻辑）
-        if (res.data.user.quote_employee?.role === '管理员') {
+        if (res.data.user.role === '管理员') {
           const requestsStr = localStorage.getItem('passwordResetRequests') || '[]'
           const requests = JSON.parse(requestsStr)
           const pending = requests.filter((r: any) => r.status === 'pending')
@@ -76,7 +76,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     try {
       const data = await getUsersListApi()
       // 排除 admin 账号，管理员密码不允许自助发起重置
-      const filtered = data.filter(u => u.account?.username !== 'admin')
+      const filtered = data.filter(u => u.username !== 'admin')
       setUsers(filtered)
     } catch (err) {
       console.error('获取用户列表失败', err)
@@ -205,7 +205,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
               >
                 {users.map((u) => (
                   <Option key={u.id} value={u.id}>
-                    {u.account?.username}（{u.quote_employee?.role || '普通员工'}）
+                    {u.username}（{u.role}）
                   </Option>
                 ))}
               </Select>
