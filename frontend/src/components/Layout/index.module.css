@@ -17,7 +17,49 @@
   padding: 0 24px;
   background: #fff;
   box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 }
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.userText {
+  font-size: 14px;
+  color: #595959;
+}
+
+.username {
+  font-weight: 600;
+  color: #262626;
+  margin-right: 4px;
+}
+
+.roleTag {
+  background: #f0f5ff;
+  color: #2f54eb;
+  border: 1px solid #adc6ff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.logoutBtn {
+  font-size: 14px;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.logoutBtn:hover {
+  color: #ff4d4f;
+}
+
 
 .content {
   margin: 16px;

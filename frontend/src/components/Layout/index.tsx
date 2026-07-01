@@ -1,6 +1,8 @@
 import { type ReactNode } from 'react'
-import { Layout, Menu } from 'antd'
+import { Layout, Menu, Button, Popconfirm, Space } from 'antd'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { LogoutOutlined, UserOutlined } from '@ant-design/icons'
+import { useAuth } from '@/context/AuthContext'
 import styles from './index.module.css'
 
 const { Sider, Content, Header } = Layout
@@ -24,6 +26,12 @@ interface AppLayoutProps {
 const AppLayout = ({ children }: AppLayoutProps) => {
   const navigate = useNavigate()
   const location = useLocation()
+  const { user, logout } = useAuth()
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
 
   return (
     <Layout className={styles.layout}>
@@ -38,7 +46,35 @@ const AppLayout = ({ children }: AppLayoutProps) => {
         />
       </Sider>
       <Layout>
-        <Header className={styles.header} />
+        <Header className={styles.header}>
+          {user && (
+            <div className={styles.userInfo}>
+              <Space className={styles.userText}>
+                <UserOutlined />
+                <span>欢迎您，</span>
+                <span className={styles.username}>{user.username}</span>
+                <span className={styles.roleTag}>{user.role}</span>
+              </Space>
+              
+              <Popconfirm
+                title="确定退出登录吗？"
+                onConfirm={handleLogout}
+                okText="确定"
+                cancelText="取消"
+                placement="bottomRight"
+              >
+                <Button 
+                  type="text" 
+                  danger 
+                  icon={<LogoutOutlined />} 
+                  className={styles.logoutBtn}
+                >
+                  退出登录
+                </Button>
+              </Popconfirm>
+            </div>
+          )}
+        </Header>
         <Content className={styles.content}>{children}</Content>
       </Layout>
     </Layout>
@@ -46,3 +82,4 @@ const AppLayout = ({ children }: AppLayoutProps) => {
 }
 
 export default AppLayout
+
