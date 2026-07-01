@@ -1,5 +1,10 @@
 import request from './request'
-import { type User } from '@/context/AuthContext'
+import { 
+  type User, 
+  DEFAULT_USER_NULL, 
+  DEFAULT_GORM_ACCOUNT, 
+  DEFAULT_GORM_QUOTE_EMPLOYEE 
+} from '@/types/gorm-models'
 
 export interface LoginResponse {
   code: number
@@ -28,27 +33,69 @@ export const loginApi = async (username: string, password: string): Promise<Logi
   } catch (error) {
     console.warn('后端服务未启动或连接失败，已自动降级至前端 Mock 运行环境')
     
-    // 前端 Mock 降级逻辑
-    const usersStr = localStorage.getItem('sys_users') || '[]'
-    const users = JSON.parse(usersStr)
-    const found = users.find((x: any) => x.username === username && x.password === password)
+    // 前端 Mock 降级逻辑：完美满足“密码错误”、“该用户不存在”的精准细化校验，并且支持主从表关联关系
+    const accountsStr = localStorage.getItem('sys_accounts') || '[]'
+    const employeesStr = localStorage.getItem('sys_employees') || '[]'
+    const quoteEmployeesStr = localStorage.getItem('sys_quote_employees') || '[]'
     
-    if (found) {
-      return {
-        code: 200,
-        message: '登录成功',
-        data: {
-          token: 'mock-token-xyz-123456',
-          user: {
-            id: found.id,
-            username: found.username,
-            role: found.role,
-            wecomId: found.wecomId,
-          }
-        }
+    const accounts = JSON.parse(accountsStr)
+    const employees = JSON.parse(employeesStr)
+    const quoteEmployees = JSON.parse(quoteEmployeesStr)
+    
+    // 1. 在模拟 account 表中，首先校验用户名是否存在
+    const accountFound = accounts.find((a: any) => a.username === username)
+    
+    if (!accountFound) {
+      throw new Error('该用户不存在')
+    }
+    
+    // 2. 用户名存在，校验密码是否匹配
+    if (accountFound.password !== password) {
+      throw new Error('密码错误')
+    }
+    
+    // 3. 登录成功：通过外键 employee_id 关联查找到对应的员工记录（主表）
+    const employeeFound = employees.find((e: any) => e.id === accountFound.employee_id)
+    
+    if (!employeeFound) {
+      throw new Error('该账号关联的员工记录已丢失，请联系管理员')
+    }
+
+    // 4. 关联报价员工表
+    const quoteEmployeeFound = quoteEmployees.find((q: any) => q.employee_id === employeeFound.id)
+    
+    // 5. 构造符合主从表嵌套设计的数据结构，没有关联记录或者无值的字段设为 null
+    // 去除所有敏感密码、wecomId 等老旧字段，全部严格根据 GORM 表结构属性自动赋 null
+    const mergedAccount = Object.assign({}, DEFAULT_GORM_ACCOUNT, {
+      id: accountFound.id,
+      employee_id: accountFound.employee_id,
+      username: accountFound.username || null,
+    })
+
+    const mergedQuoteEmployee = quoteEmployeeFound 
+      ? Object.assign({}, DEFAULT_GORM_QUOTE_EMPLOYEE, {
+          id: quoteEmployeeFound.id,
+          employee_id: quoteEmployeeFound.employee_id,
+          role: quoteEmployeeFound.role || null,
+        })
+      : null
+
+    const mergedUser: User = Object.assign({}, DEFAULT_USER_NULL, {
+      id: employeeFound.id,
+      employee_number: employeeFound.employee_number || null,
+      name: employeeFound.name || null,
+      department: employeeFound.department || null,
+      account: mergedAccount,
+      quote_employee: mergedQuoteEmployee
+    })
+    
+    return {
+      code: 200,
+      message: '登录成功',
+      data: {
+        token: 'mock-token-xyz-123456',
+        user: mergedUser
       }
-    } else {
-      throw new Error('账号或密码错误')
     }
   }
 }
@@ -61,15 +108,42 @@ export const getUsersListApi = async (): Promise<User[]> => {
     const res = await request.get<User[]>('/auth/users')
     return res.data
   } catch (error) {
-    const usersStr = localStorage.getItem('sys_users') || '[]'
-    const users = JSON.parse(usersStr)
-    // 排除管理员本身，或者返回全部
-    return users.map((u: any) => ({
-      id: u.id,
-      username: u.username,
-      role: u.role,
-      wecomId: u.wecomId,
-    }))
+    const accountsStr = localStorage.getItem('sys_accounts') || '[]'
+    const employeesStr = localStorage.getItem('sys_employees') || '[]'
+    const quoteEmployeesStr = localStorage.getItem('sys_quote_employees') || '[]'
+    
+    const accounts = JSON.parse(accountsStr)
+    const employees = JSON.parse(employeesStr)
+    const quoteEmployees = JSON.parse(quoteEmployeesStr)
+    
+    // 同样采用主从嵌套式的默认数据格式返回
+    return accounts.map((a: any) => {
+      const e = employees.find((x: any) => x.id === a.employee_id) || {}
+      const q = quoteEmployees.find((x: any) => x.employee_id === e.id) || {}
+      
+      const mergedAccount = Object.assign({}, DEFAULT_GORM_ACCOUNT, {
+        id: a.id,
+        employee_id: a.employee_id,
+        username: a.username || null,
+      })
+
+      const mergedQuoteEmployee = q.id 
+        ? Object.assign({}, DEFAULT_GORM_QUOTE_EMPLOYEE, {
+            id: q.id,
+            employee_id: q.employee_id,
+            role: q.role || null,
+          })
+        : null
+
+      return Object.assign({}, DEFAULT_USER_NULL, {
+        id: e.id || 0,
+        employee_number: e.employee_number || null,
+        name: e.name || null,
+        department: e.department || null,
+        account: mergedAccount,
+        quote_employee: mergedQuoteEmployee
+      })
+    })
   }
 }
 
