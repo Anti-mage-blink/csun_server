@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 
-	"csun_server-backend/config"
 	"csun_server-backend/handler"
 	"csun_server-backend/repository"
 	"csun_server-backend/router"
@@ -16,13 +15,14 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	gorm_mysql "gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 )
 
-// initDB 从环境变量读取连接参数并建立 MySQL 连接
+// initDB 从环境变量读取连接参数并建立 MySQL 连接，不绑定到特定数据库
 func initDB() *sql.DB {
 	dsn := os.Getenv("DB_USER") + ":" + os.Getenv("DB_PASSWORD") +
 		"@tcp(" + os.Getenv("DB_HOST") + ":" + os.Getenv("DB_PORT") + ")/" +
-		os.Getenv("DB_NAME") + "?charset=utf8mb4&parseTime=true&loc=Local"
+		"?charset=utf8mb4&parseTime=true&loc=Local"
 	d, err := sql.Open("mysql", dsn)
 	if err != nil {
 		log.Fatalf("sql.Open 失败: %v", err)
@@ -37,29 +37,58 @@ func main() {
 	db := initDB()
 	defer db.Close()
 
-	// 初始化 GORM，复用已有的 sql.DB
-	gormDB, err := gorm.Open(gorm_mysql.New(gorm_mysql.Config{
+	// 初始化三套不同前缀的虚拟 GORM 实例
+	generalDB, err := gorm.Open(gorm_mysql.New(gorm_mysql.Config{
 		Conn: db,
-	}), &gorm.Config{})
+	}), &gorm.Config{
+		NamingStrategy: schema.NamingStrategy{
+			TablePrefix: "general.",
+		},
+	})
 	if err != nil {
-		log.Fatalf("GORM 初始化失败: %v", err)
+		log.Fatalf("General GORM 初始化失败: %v", err)
 	}
 
-	// 注册多数据库自动表名前缀重写 Callback (支持 general, product, quote_manage, other 跨库联合查询)
-	config.AddDatabasePrefixCallback(gormDB)
+	productDB, err := gorm.Open(gorm_mysql.New(gorm_mysql.Config{
+		Conn: db,
+	}), &gorm.Config{
+		NamingStrategy: schema.NamingStrategy{
+			TablePrefix: "product.",
+		},
+	})
+	if err != nil {
+		log.Fatalf("Product GORM 初始化失败: %v", err)
+	}
+
+	quoteManageDB, err := gorm.Open(gorm_mysql.New(gorm_mysql.Config{
+		Conn: db,
+	}), &gorm.Config{
+		NamingStrategy: schema.NamingStrategy{
+			TablePrefix: "quote_manage.",
+		},
+	})
+	if err != nil {
+		log.Fatalf("QuoteManage GORM 初始化失败: %v", err)
+	}
+
+	dbEngine := &repository.DBEngine{
+		General:     generalDB,
+		Product:     productDB,
+		QuoteManage: quoteManageDB,
+	}
 
 	// 初始化 Auth 依赖链
-	authRepo := repository.NewAuthRepository(gormDB)
+	authRepo := repository.NewAuthRepository(dbEngine.General)
 	authService := service.NewAuthService(authRepo)
 	authHandler := handler.NewAuthHandler(authService)
 
 	// 初始化 Password 依赖链
-	passwordRepo := repository.NewPasswordRepository(gormDB)
+	passwordRepo := repository.NewPasswordRepository(dbEngine.General)
 	passwordService := service.NewPasswordService(passwordRepo)
 	passwordHandler := handler.NewPasswordHandler(passwordService)
 
 	// 初始化 QuoteCreate 依赖链
-	quoteCreateRepo := repository.NewQuoteCreateRepository(gormDB)
+	quoteCreateRepo := repository.NewQuoteCreateRepository(dbEngine)
 	quoteCreateService := service.NewQuoteCreateService(quoteCreateRepo)
 	quoteCreateHandler := handler.NewQuoteCreateHandler(quoteCreateService)
 
