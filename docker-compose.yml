@@ -38,10 +38,10 @@ services:
       DB_USER: root
       DB_PASSWORD: ${MYSQL_ROOT_PASSWORD:-Azh501azh}
       DB_NAME: quote_manage
-    # 仅在内部网络暴露，不映射到宿主机；前端 nginx 通过 /api/ 反代访问。
-    # 如需本地调试，取消下行注释（仅绑定 127.0.0.1）。
-    # ports:
-    #   - "127.0.0.1:8080:8080"
+    # 暴露后端接口到公网，便于外部直接访问 /api（如本地联调、Postman 测试）
+    # 绑定 0.0.0.0:8080 即对所有网卡生效，可被公网访问
+    ports:
+      - "8080:8080"
     expose:
       - "8080"
     networks:
