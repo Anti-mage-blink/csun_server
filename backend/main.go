@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"csun_server-backend/config"
 	"csun_server-backend/handler"
 	"csun_server-backend/repository"
 	"csun_server-backend/router"
@@ -43,6 +44,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("GORM 初始化失败: %v", err)
 	}
+
+	// 注册多数据库自动表名前缀重写 Callback (支持 general, product, quote_manage, other 跨库联合查询)
+	config.AddDatabasePrefixCallback(gormDB)
 
 	// 初始化 Auth 依赖链
 	authRepo := repository.NewAuthRepository(gormDB)
