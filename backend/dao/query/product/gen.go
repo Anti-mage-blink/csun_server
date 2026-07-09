@@ -20,8 +20,8 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		db:              db,
 		PriceCatalog:    newPriceCatalog(db, opts...),
 		ProductCategory: newProductCategory(db, opts...),
-		ProductSku:      newProductSku(db, opts...),
-		ProductSpu:      newProductSpu(db, opts...),
+		ProductName:     newProductName(db, opts...),
+		ProductSpec:     newProductSpec(db, opts...),
 		Shape:           newShape(db, opts...),
 	}
 }
@@ -31,8 +31,8 @@ type Query struct {
 
 	PriceCatalog    priceCatalog
 	ProductCategory productCategory
-	ProductSku      productSku
-	ProductSpu      productSpu
+	ProductName     productName
+	ProductSpec     productSpec
 	Shape           shape
 }
 
@@ -45,8 +45,8 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		db:              db,
 		PriceCatalog:    q.PriceCatalog.clone(db),
 		ProductCategory: q.ProductCategory.clone(db),
-		ProductSku:      q.ProductSku.clone(db),
-		ProductSpu:      q.ProductSpu.clone(db),
+		ProductName:     q.ProductName.clone(db),
+		ProductSpec:     q.ProductSpec.clone(db),
 		Shape:           q.Shape.clone(db),
 	}
 }
@@ -64,8 +64,8 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		db:              db,
 		PriceCatalog:    q.PriceCatalog.replaceDB(db),
 		ProductCategory: q.ProductCategory.replaceDB(db),
-		ProductSku:      q.ProductSku.replaceDB(db),
-		ProductSpu:      q.ProductSpu.replaceDB(db),
+		ProductName:     q.ProductName.replaceDB(db),
+		ProductSpec:     q.ProductSpec.replaceDB(db),
 		Shape:           q.Shape.replaceDB(db),
 	}
 }
@@ -73,8 +73,8 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 type queryCtx struct {
 	PriceCatalog    IPriceCatalogDo
 	ProductCategory IProductCategoryDo
-	ProductSku      IProductSkuDo
-	ProductSpu      IProductSpuDo
+	ProductName     IProductNameDo
+	ProductSpec     IProductSpecDo
 	Shape           IShapeDo
 }
 
@@ -82,8 +82,8 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
 		PriceCatalog:    q.PriceCatalog.WithContext(ctx),
 		ProductCategory: q.ProductCategory.WithContext(ctx),
-		ProductSku:      q.ProductSku.WithContext(ctx),
-		ProductSpu:      q.ProductSpu.WithContext(ctx),
+		ProductName:     q.ProductName.WithContext(ctx),
+		ProductSpec:     q.ProductSpec.WithContext(ctx),
 		Shape:           q.Shape.WithContext(ctx),
 	}
 }

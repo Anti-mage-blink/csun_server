@@ -8,9 +8,11 @@ const TableNamePriceCatalog = "price_catalog"
 
 // PriceCatalog mapped from table <price_catalog>
 type PriceCatalog struct {
-	ID    int32    `gorm:"column:id;type:int unsigned;primaryKey;autoIncrement:true" json:"id"`
-	SkuID *int32   `gorm:"column:sku_id;type:int" json:"sku_id"`
-	Price *float64 `gorm:"column:price;type:decimal(10,2)" json:"price"`
+	ID                        int32    `gorm:"column:id;type:int unsigned;primaryKey;autoIncrement:true" json:"id"`
+	SpecID                    *int32   `gorm:"column:spec_id;type:int unsigned;index:price_catalog_spec,priority:1" json:"spec_id"`
+	BigBatchBasePrice         *float64 `gorm:"column:big_batch_base_price;type:decimal(10,2)" json:"big_batch_base_price"`
+	MiddleSmallBatchBasePrice *float64 `gorm:"column:middle_small_batch_base_price;type:decimal(10,2)" json:"middle_small_batch_base_price"`
+	SampleSmallOrderBasePrice *float64 `gorm:"column:sample_small_order_base_price;type:decimal(10,2)" json:"sample_small_order_base_price"`
 }
 
 // TableName PriceCatalog's table name

@@ -29,8 +29,10 @@ func newPriceCatalog(db *gorm.DB, opts ...gen.DOOption) priceCatalog {
 	tableName := _priceCatalog.priceCatalogDo.TableName()
 	_priceCatalog.ALL = field.NewAsterisk(tableName)
 	_priceCatalog.ID = field.NewInt32(tableName, "id")
-	_priceCatalog.SkuID = field.NewInt32(tableName, "sku_id")
-	_priceCatalog.Price = field.NewFloat64(tableName, "price")
+	_priceCatalog.SpecID = field.NewInt32(tableName, "spec_id")
+	_priceCatalog.BigBatchBasePrice = field.NewFloat64(tableName, "big_batch_base_price")
+	_priceCatalog.MiddleSmallBatchBasePrice = field.NewFloat64(tableName, "middle_small_batch_base_price")
+	_priceCatalog.SampleSmallOrderBasePrice = field.NewFloat64(tableName, "sample_small_order_base_price")
 
 	_priceCatalog.fillFieldMap()
 
@@ -40,10 +42,12 @@ func newPriceCatalog(db *gorm.DB, opts ...gen.DOOption) priceCatalog {
 type priceCatalog struct {
 	priceCatalogDo
 
-	ALL   field.Asterisk
-	ID    field.Int32
-	SkuID field.Int32
-	Price field.Float64
+	ALL                       field.Asterisk
+	ID                        field.Int32
+	SpecID                    field.Int32
+	BigBatchBasePrice         field.Float64
+	MiddleSmallBatchBasePrice field.Float64
+	SampleSmallOrderBasePrice field.Float64
 
 	fieldMap map[string]field.Expr
 }
@@ -61,8 +65,10 @@ func (p priceCatalog) As(alias string) *priceCatalog {
 func (p *priceCatalog) updateTableName(table string) *priceCatalog {
 	p.ALL = field.NewAsterisk(table)
 	p.ID = field.NewInt32(table, "id")
-	p.SkuID = field.NewInt32(table, "sku_id")
-	p.Price = field.NewFloat64(table, "price")
+	p.SpecID = field.NewInt32(table, "spec_id")
+	p.BigBatchBasePrice = field.NewFloat64(table, "big_batch_base_price")
+	p.MiddleSmallBatchBasePrice = field.NewFloat64(table, "middle_small_batch_base_price")
+	p.SampleSmallOrderBasePrice = field.NewFloat64(table, "sample_small_order_base_price")
 
 	p.fillFieldMap()
 
@@ -79,10 +85,12 @@ func (p *priceCatalog) GetFieldByName(fieldName string) (field.OrderExpr, bool) 
 }
 
 func (p *priceCatalog) fillFieldMap() {
-	p.fieldMap = make(map[string]field.Expr, 3)
+	p.fieldMap = make(map[string]field.Expr, 5)
 	p.fieldMap["id"] = p.ID
-	p.fieldMap["sku_id"] = p.SkuID
-	p.fieldMap["price"] = p.Price
+	p.fieldMap["spec_id"] = p.SpecID
+	p.fieldMap["big_batch_base_price"] = p.BigBatchBasePrice
+	p.fieldMap["middle_small_batch_base_price"] = p.MiddleSmallBatchBasePrice
+	p.fieldMap["sample_small_order_base_price"] = p.SampleSmallOrderBasePrice
 }
 
 func (p priceCatalog) clone(db *gorm.DB) priceCatalog {

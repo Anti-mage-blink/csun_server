@@ -20,6 +20,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		db:            db,
 		AQuoteItem:    newAQuoteItem(db, opts...),
 		BQuoteItem:    newBQuoteItem(db, opts...),
+		CostWorksheet: newCostWorksheet(db, opts...),
 		OperationLog:  newOperationLog(db, opts...),
 		Quote:         newQuote(db, opts...),
 		QuoteEmployee: newQuoteEmployee(db, opts...),
@@ -31,6 +32,7 @@ type Query struct {
 
 	AQuoteItem    aQuoteItem
 	BQuoteItem    bQuoteItem
+	CostWorksheet costWorksheet
 	OperationLog  operationLog
 	Quote         quote
 	QuoteEmployee quoteEmployee
@@ -45,6 +47,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		db:            db,
 		AQuoteItem:    q.AQuoteItem.clone(db),
 		BQuoteItem:    q.BQuoteItem.clone(db),
+		CostWorksheet: q.CostWorksheet.clone(db),
 		OperationLog:  q.OperationLog.clone(db),
 		Quote:         q.Quote.clone(db),
 		QuoteEmployee: q.QuoteEmployee.clone(db),
@@ -64,6 +67,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		db:            db,
 		AQuoteItem:    q.AQuoteItem.replaceDB(db),
 		BQuoteItem:    q.BQuoteItem.replaceDB(db),
+		CostWorksheet: q.CostWorksheet.replaceDB(db),
 		OperationLog:  q.OperationLog.replaceDB(db),
 		Quote:         q.Quote.replaceDB(db),
 		QuoteEmployee: q.QuoteEmployee.replaceDB(db),
@@ -73,6 +77,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 type queryCtx struct {
 	AQuoteItem    IAQuoteItemDo
 	BQuoteItem    IBQuoteItemDo
+	CostWorksheet ICostWorksheetDo
 	OperationLog  IOperationLogDo
 	Quote         IQuoteDo
 	QuoteEmployee IQuoteEmployeeDo
@@ -82,6 +87,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
 		AQuoteItem:    q.AQuoteItem.WithContext(ctx),
 		BQuoteItem:    q.BQuoteItem.WithContext(ctx),
+		CostWorksheet: q.CostWorksheet.WithContext(ctx),
 		OperationLog:  q.OperationLog.WithContext(ctx),
 		Quote:         q.Quote.WithContext(ctx),
 		QuoteEmployee: q.QuoteEmployee.WithContext(ctx),

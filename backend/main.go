@@ -6,12 +6,15 @@ import (
 	"net/http"
 	"os"
 
+	"csun_server-backend/handler"
+	"csun_server-backend/repository"
+	"csun_server-backend/router"
+	"csun_server-backend/service"
+
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	gorm_mysql "gorm.io/driver/mysql"
 	"gorm.io/gorm"
-
-	"csun_server-backend/service"
 )
 
 // initDB 从环境变量读取连接参数并建立 MySQL 连接
@@ -41,8 +44,32 @@ func main() {
 		log.Fatalf("GORM 初始化失败: %v", err)
 	}
 
+	// 初始化 Auth 依赖链
+	authRepo := repository.NewAuthRepository(gormDB)
+	authService := service.NewAuthService(authRepo)
+	authHandler := handler.NewAuthHandler(authService)
+
+	// 初始化 Password 依赖链
+	passwordRepo := repository.NewPasswordRepository(gormDB)
+	passwordService := service.NewPasswordService(passwordRepo)
+	passwordHandler := handler.NewPasswordHandler(passwordService)
+
+	// 初始化 QuoteCreate 依赖链
+	quoteCreateRepo := repository.NewQuoteCreateRepository(gormDB)
+	quoteCreateService := service.NewQuoteCreateService(quoteCreateRepo)
+	quoteCreateHandler := handler.NewQuoteCreateHandler(quoteCreateService)
+
 	// gin.Default() 创建一个带 Logger 与 Recovery 中间件的引擎
 	r := gin.Default()
+
+	// 注册 Auth 路由
+	router.RegisterAuthRoutes(r, authHandler)
+	// 注册 Password 路由
+	router.RegisterPasswordRoutes(r, passwordHandler)
+	// 注册 QuoteCreate 路由
+	router.RegisterQuoteCreateRoutes(r, quoteCreateHandler)
+
+
 
 	// 根路由：返回 JSON 格式的 Hello World
 	r.GET("/", func(c *gin.Context) {
@@ -57,63 +84,6 @@ func main() {
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "pong",
-		})
-	})
-
-	// 获取新报价单号接口
-	r.GET("/quote-manage/new-code", func(c *gin.Context) {
-		code, err := service.GetNewQuoteCode(c.Request.Context(), gormDB)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error":   "生成报价单编号失败",
-				"detail":  err.Error(),
-				"success": false,
-			})
-			return
-		}
-		c.JSON(http.StatusOK, gin.H{
-			"code":    code,
-			"success": true,
-		})
-	})
-
-	// 查询 quote_manage 数据库的所有数据表名
-	r.GET("/tables", func(c *gin.Context) {
-		rows, err := db.Query("SHOW TABLES")
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error":   "查询表失败",
-				"detail":  err.Error(),
-				"success": false,
-			})
-			return
-		}
-		defer rows.Close()
-
-		var tables []string
-		for rows.Next() {
-			var name string
-			if err := rows.Scan(&name); err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{
-					"error":   "读取表名失败",
-					"detail":  err.Error(),
-					"success": false,
-				})
-				return
-			}
-			tables = append(tables, name)
-		}
-
-		// 确保 tables 为 nil 时返回空数组而非 null
-		if tables == nil {
-			tables = []string{}
-		}
-
-		c.JSON(http.StatusOK, gin.H{
-			"database": os.Getenv("DB_NAME"),
-			"tables":   tables,
-			"count":    len(tables),
-			"success":  true,
 		})
 	})
 
