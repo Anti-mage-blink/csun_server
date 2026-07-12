@@ -40,8 +40,8 @@ services:
       DB_NAME: quote_manage
     # 暴露后端接口到公网，便于外部直接访问 /api（如本地联调、Postman 测试）
     # 绑定 0.0.0.0:8080 即对所有网卡生效，可被公网访问
-    ports:
-      - "8080:8080"
+    # ports:
+    #   - "8080:8080"
     expose:
       - "8080"
     networks:
