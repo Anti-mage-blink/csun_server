@@ -21,14 +21,33 @@ export interface LoginResponse {
  */
 export const loginApi = async (username: string, password: string): Promise<LoginResponse> => {
   try {
-    // 铺底网络接口：尝试发起后端调用（在容器网络中为 /api/auth/login 或 /api/login）
-    // 目前捕获错误，用于后端未启动时本地降级调试
-    const res = await request.post<LoginResponse>('/auth/login', { username, password })
-    return res.data
-  } catch (error) {
+    // 1. 发起真实的后端连接测试
+    const res = await request.post<any>('/login', { username, password })
+    const backendData = res.data // 后端真实的 JSON 返回体：{ message: string, data: Employee }
+    
+    // 2. 💡 将后端的 Employee 模型转换适配为前端期望的 LoginResponse 契约
+    return {
+      code: res.status, // 补齐前端需要的成功状态码
+      message: backendData.message || '登录成功',
+      data: {
+        token: 'token-placeholder-xyz-123456', // 暂存本地 Token 占位符
+        user: {
+          id: backendData.data.id,
+          username: backendData.data.name || backendData.data.employee_number || username,
+          role: backendData.data.department || '普通员工', // 将后端的部门充当用户的 Role
+          wecomId: '' // 暂无
+        }
+      }
+    }
+  } catch (error: any) {
+    // 3. 💡 若后端服务在运行，但账号/密码错误（401等），直接抛出后端响应的真实错误原因
+    if (error.response && error.response.data) {
+      throw new Error(error.response.data.message || '登录校验失败')
+    }
+    
+    // 4. 当本地后端未启动或网络不通时，才走自动降级 Mock 调试（原降级逻辑保持不变）
     console.warn('后端服务未启动或连接失败，已自动降级至前端 Mock 运行环境')
     
-    // 前端 Mock 降级逻辑
     const usersStr = localStorage.getItem('sys_users') || '[]'
     const users = JSON.parse(usersStr)
     const found = users.find((x: any) => x.username === username && x.password === password)

@@ -15,7 +15,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	gorm_mysql "gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"gorm.io/gorm/schema"
 )
 
 // initDB 从环境变量读取连接参数并建立 MySQL 连接，不绑定到特定数据库
@@ -37,44 +36,18 @@ func main() {
 	db := initDB()
 	defer db.Close()
 
-	// 初始化三套不同前缀的虚拟 GORM 实例
-	generalDB, err := gorm.Open(gorm_mysql.New(gorm_mysql.Config{
+	// 初始化唯一的 GORM 实例
+	globalDB, err := gorm.Open(gorm_mysql.New(gorm_mysql.Config{
 		Conn: db,
-	}), &gorm.Config{
-		NamingStrategy: schema.NamingStrategy{
-			TablePrefix: "general.",
-		},
-	})
+	}), &gorm.Config{})
 	if err != nil {
-		log.Fatalf("General GORM 初始化失败: %v", err)
-	}
-
-	productDB, err := gorm.Open(gorm_mysql.New(gorm_mysql.Config{
-		Conn: db,
-	}), &gorm.Config{
-		NamingStrategy: schema.NamingStrategy{
-			TablePrefix: "product.",
-		},
-	})
-	if err != nil {
-		log.Fatalf("Product GORM 初始化失败: %v", err)
-	}
-
-	quoteManageDB, err := gorm.Open(gorm_mysql.New(gorm_mysql.Config{
-		Conn: db,
-	}), &gorm.Config{
-		NamingStrategy: schema.NamingStrategy{
-			TablePrefix: "quote_manage.",
-		},
-	})
-	if err != nil {
-		log.Fatalf("QuoteManage GORM 初始化失败: %v", err)
+		log.Fatalf("GORM 初始化失败: %v", err)
 	}
 
 	dbEngine := &repository.DBEngine{
-		General:     generalDB,
-		Product:     productDB,
-		QuoteManage: quoteManageDB,
+		General:     globalDB,
+		Product:     globalDB,
+		QuoteManage: globalDB,
 	}
 
 	// 初始化 Auth 依赖链
@@ -87,10 +60,10 @@ func main() {
 	passwordService := service.NewPasswordService(passwordRepo)
 	passwordHandler := handler.NewPasswordHandler(passwordService)
 
-	// 初始化 QuoteCreate 依赖链
-	quoteCreateRepo := repository.NewQuoteCreateRepository(dbEngine)
-	quoteCreateService := service.NewQuoteCreateService(quoteCreateRepo)
-	quoteCreateHandler := handler.NewQuoteCreateHandler(quoteCreateService)
+	// 初始化 CreateQuote 依赖链
+	createQuoteRepo := repository.NewCreateQuoteRepository(dbEngine)
+	createQuoteService := service.NewCreateQuoteService(createQuoteRepo)
+	createQuoteHandler := handler.NewCreateQuoteHandler(createQuoteService)
 
 	// gin.Default() 创建一个带 Logger 与 Recovery 中间件的引擎
 	r := gin.Default()
@@ -99,10 +72,8 @@ func main() {
 	router.RegisterAuthRoutes(r, authHandler)
 	// 注册 Password 路由
 	router.RegisterPasswordRoutes(r, passwordHandler)
-	// 注册 QuoteCreate 路由
-	router.RegisterQuoteCreateRoutes(r, quoteCreateHandler)
-
-
+	// 注册 CreateQuote 路由
+	router.RegisterCreateQuoteRoutes(r, createQuoteHandler)
 
 	// 根路由：返回 JSON 格式的 Hello World
 	r.GET("/", func(c *gin.Context) {

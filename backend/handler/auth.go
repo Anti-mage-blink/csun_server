@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"log"
 	"net/http"
 
 	"csun_server-backend/service"
@@ -42,6 +43,8 @@ func (h *AuthHandler) Login(c *gin.Context) {
 			c.JSON(http.StatusNotFound, gin.H{"message": "关联的员工不存在"})
 			return
 		}
+		// 记录真正的错误原因，便于在容器日志中排查
+		log.Printf("[Login] 内部错误: username=%s, err=%v", req.Username, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "服务器内部错误"})
 		return
 	}

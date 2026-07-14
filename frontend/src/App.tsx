@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import AppLayout from '@/components/Layout'
 import AppRoutes from '@/routes'
-import Login from '@/modules/login'
+import Login from '@/pages/login'
 import { AuthProvider, useAuth } from '@/context/AuthContext'
 import { Spin } from 'antd'
 

@@ -12,7 +12,7 @@ const { Sider, Content, Header } = Layout
  * 新增模块时：在此追加一项，并在 routes/index.tsx 追加对应路由
  */
 const menuItems = [
-  { key: '/quote-create', label: '新建报价单' },
+  { key: '/create-quote', label: '新建报价单' },
 ]
 
 interface AppLayoutProps {

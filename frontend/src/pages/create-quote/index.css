@@ -1,0 +1,37 @@
+/* index.css */
+
+.create-quote-container {
+  padding: 24px;
+  background-color: #f5f7fa;
+  min-height: 100vh;
+}
+
+.create-quote-card {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  background: #ffffff;
+  padding: 24px;
+}
+
+.create-quote-title {
+  margin-bottom: 24px !important;
+  color: #1f1f1f;
+  font-weight: 600;
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 12px;
+}
+
+.form-row {
+  margin-bottom: 16px;
+}
+
+.custom-form-item {
+  margin-bottom: 0px;
+}
+
+/* 统一输入控件高度和样式 */
+.create-quote-container .ant-input-disabled,
+.create-quote-container .ant-select-disabled {
+  background-color: #fafafa !important;
+  color: rgba(0, 0, 0, 0.45) !important;
+}
