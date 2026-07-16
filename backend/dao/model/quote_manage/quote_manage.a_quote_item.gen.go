@@ -18,7 +18,7 @@ type AQuoteItem struct {
 	ProductCategoryName *string    `gorm:"column:product_category_name;type:varchar(255)" json:"product_category_name"`
 	ProductNameID       *int32     `gorm:"column:product_name_id;type:int unsigned" json:"product_name_id"`
 	ProductName         *string    `gorm:"column:product_name;type:varchar(255)" json:"product_name"`
-	ProductSpecID       *string    `gorm:"column:product_spec_id;type:varchar(255)" json:"product_spec_id"`
+	ProductSpecID       *int32     `gorm:"column:product_spec_id;type:int" json:"product_spec_id"`
 	ProductSpec         *string    `gorm:"column:product_spec;type:varchar(255)" json:"product_spec"`
 	PriceCatalogVersion *string    `gorm:"column:price_catalog_version;type:varchar(255)" json:"price_catalog_version"`
 	OrderBatchTier      *string    `gorm:"column:order_batch_tier;type:varchar(255)" json:"order_batch_tier"`

@@ -8,8 +8,9 @@ const TableNameProcess = "general.process"
 
 // Process mapped from table <general.process>
 type Process struct {
-	ID   int32   `gorm:"column:id;type:int unsigned;primaryKey;autoIncrement:true" json:"id"`
-	Name *string `gorm:"column:name;type:varchar(255)" json:"name"`
+	ID        int32   `gorm:"column:id;type:int unsigned;primaryKey;autoIncrement:true" json:"id"`
+	Name      *string `gorm:"column:name;type:varchar(255)" json:"name"`
+	CreatedAt *string `gorm:"column:created_at;type:varchar(255)" json:"created_at"`
 }
 
 // TableName Process's table name

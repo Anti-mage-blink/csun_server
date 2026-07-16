@@ -30,6 +30,7 @@ func newProcess(db *gorm.DB, opts ...gen.DOOption) process {
 	_process.ALL = field.NewAsterisk(tableName)
 	_process.ID = field.NewInt32(tableName, "id")
 	_process.Name = field.NewString(tableName, "name")
+	_process.CreatedAt = field.NewString(tableName, "created_at")
 
 	_process.fillFieldMap()
 
@@ -39,9 +40,10 @@ func newProcess(db *gorm.DB, opts ...gen.DOOption) process {
 type process struct {
 	processDo
 
-	ALL  field.Asterisk
-	ID   field.Int32
-	Name field.String
+	ALL       field.Asterisk
+	ID        field.Int32
+	Name      field.String
+	CreatedAt field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -60,6 +62,7 @@ func (p *process) updateTableName(table string) *process {
 	p.ALL = field.NewAsterisk(table)
 	p.ID = field.NewInt32(table, "id")
 	p.Name = field.NewString(table, "name")
+	p.CreatedAt = field.NewString(table, "created_at")
 
 	p.fillFieldMap()
 
@@ -76,9 +79,10 @@ func (p *process) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (p *process) fillFieldMap() {
-	p.fieldMap = make(map[string]field.Expr, 2)
+	p.fieldMap = make(map[string]field.Expr, 3)
 	p.fieldMap["id"] = p.ID
 	p.fieldMap["name"] = p.Name
+	p.fieldMap["created_at"] = p.CreatedAt
 }
 
 func (p process) clone(db *gorm.DB) process {

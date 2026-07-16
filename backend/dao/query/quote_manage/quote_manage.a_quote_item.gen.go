@@ -34,7 +34,7 @@ func newAQuoteItem(db *gorm.DB, opts ...gen.DOOption) aQuoteItem {
 	_aQuoteItem.ProductCategoryName = field.NewString(tableName, "product_category_name")
 	_aQuoteItem.ProductNameID = field.NewInt32(tableName, "product_name_id")
 	_aQuoteItem.ProductName = field.NewString(tableName, "product_name")
-	_aQuoteItem.ProductSpecID = field.NewString(tableName, "product_spec_id")
+	_aQuoteItem.ProductSpecID = field.NewInt32(tableName, "product_spec_id")
 	_aQuoteItem.ProductSpec = field.NewString(tableName, "product_spec")
 	_aQuoteItem.PriceCatalogVersion = field.NewString(tableName, "price_catalog_version")
 	_aQuoteItem.OrderBatchTier = field.NewString(tableName, "order_batch_tier")
@@ -62,7 +62,7 @@ type aQuoteItem struct {
 	ProductCategoryName field.String
 	ProductNameID       field.Int32
 	ProductName         field.String
-	ProductSpecID       field.String
+	ProductSpecID       field.Int32
 	ProductSpec         field.String
 	PriceCatalogVersion field.String
 	OrderBatchTier      field.String
@@ -96,7 +96,7 @@ func (a *aQuoteItem) updateTableName(table string) *aQuoteItem {
 	a.ProductCategoryName = field.NewString(table, "product_category_name")
 	a.ProductNameID = field.NewInt32(table, "product_name_id")
 	a.ProductName = field.NewString(table, "product_name")
-	a.ProductSpecID = field.NewString(table, "product_spec_id")
+	a.ProductSpecID = field.NewInt32(table, "product_spec_id")
 	a.ProductSpec = field.NewString(table, "product_spec")
 	a.PriceCatalogVersion = field.NewString(table, "price_catalog_version")
 	a.OrderBatchTier = field.NewString(table, "order_batch_tier")
