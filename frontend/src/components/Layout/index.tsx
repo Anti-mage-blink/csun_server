@@ -9,7 +9,7 @@ const { Sider, Content, Header } = Layout
 
 // 定义所有的菜单项及其对应的角色权限
 const ALL_MENU_ITEMS = [
-  { key: '/create-quote', label: '新建报价单', roles: ['市场部', '管理员', '上帝'] },
+  { key: '/create-quote', label: '新建报价单', roles: ['市场部', '管理员','工作小组组长-光伏热场', '工作小组组长-摩擦', '上帝'] },
   { key: '/filing', label: '备案查看', roles: ['财务部', '管理员', '上帝'] },
   { key: '/my-applications', label: '我的申请', roles: ['市场部', '上帝'] },
   { key: '/my-approvals', label: '我的审批', roles: ['领导小组组长', '领导小组副组长', '工作小组组长-光伏热场', '工作小组组长-摩擦', '上帝'] },

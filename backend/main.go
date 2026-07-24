@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
+	_ "time/tzdata"
 
 	"csun_server-backend/router_handler"
 	"csun_server-backend/service_repository"
@@ -14,6 +16,14 @@ import (
 	gorm_mysql "gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
+
+func init() {
+	var err error
+	time.Local, err = time.LoadLocation("Asia/Shanghai")
+	if err != nil {
+		log.Printf("初始化东八区时区失败: %v", err)
+	}
+}
 
 // initDB 从环境变量读取连接参数并建立 MySQL 连接，不绑定 to 特定数据库
 func initDB() *sql.DB {
