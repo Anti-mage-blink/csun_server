@@ -1,18 +1,18 @@
-import { type ReactNode } from 'react'
+import { type ReactNode, useState } from 'react'
 import { Layout, Menu, Button, Popconfirm, Space } from 'antd'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { LogoutOutlined, UserOutlined } from '@ant-design/icons'
+import { LogoutOutlined, UserOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons'
 import { useAuth } from '@/context/AuthContext'
 import styles from './index.module.css'
 
 const { Sider, Content, Header } = Layout
 
-/**
- * 左侧菜单配置
- * 新增模块时：在此追加一项，并在 routes/index.tsx 追加对应路由
- */
-const menuItems = [
-  { key: '/create-quote', label: '新建报价单' },
+// 定义所有的菜单项及其对应的角色权限
+const ALL_MENU_ITEMS = [
+  { key: '/create-quote', label: '新建报价单', roles: ['市场部', '管理员', '上帝'] },
+  { key: '/filing', label: '备案查看', roles: ['财务部', '管理员', '上帝'] },
+  { key: '/my-applications', label: '我的申请', roles: ['市场部', '上帝'] },
+  { key: '/my-approvals', label: '我的审批', roles: ['领导小组组长', '领导小组副组长', '工作小组组长-光伏热场', '工作小组组长-摩擦', '上帝'] },
 ]
 
 interface AppLayoutProps {
@@ -27,6 +27,13 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, logout } = useAuth()
+  const [collapsed, setCollapsed] = useState(false)
+
+  // 根据当前用户的角色过滤菜单项
+  const menuItems = ALL_MENU_ITEMS.filter(item => {
+    if (!user) return false
+    return item.roles.includes(user.role)
+  })
 
   const handleLogout = () => {
     logout()
@@ -35,7 +42,13 @@ const AppLayout = ({ children }: AppLayoutProps) => {
 
   return (
     <Layout className={styles.layout}>
-      <Sider>
+      <Sider
+        collapsible
+        collapsed={collapsed}
+        trigger={null}
+        collapsedWidth={0}
+        width={200}
+      >
         <div className={styles.logo}>报价管理系统 v2</div>
         <Menu
           theme="dark"
@@ -45,6 +58,17 @@ const AppLayout = ({ children }: AppLayoutProps) => {
           onClick={({ key }) => navigate(key)}
         />
       </Sider>
+
+      {/* 收起/展开圆形按钮 */}
+      <div
+        className={styles.trigger}
+        style={{ left: collapsed ? '12px' : '200px' }}
+        onClick={() => setCollapsed(!collapsed)}
+        title={collapsed ? '展开侧边栏' : '收起侧边栏'}
+      >
+        {collapsed ? <RightOutlined /> : <LeftOutlined />}
+      </div>
+
       <Layout>
         <Header className={styles.header}>
           {user && (

@@ -29,9 +29,44 @@
   margin-bottom: 0px;
 }
 
+/* 让表单 label 的字体加粗、颜色与明细表头样式一致 */
+.create-quote-container .ant-form-item-label > label {
+  font-weight: 600 !important;
+  color: #1f1f1f !important;
+}
+
 /* 统一输入控件高度和样式 */
 .create-quote-container .ant-input-disabled,
 .create-quote-container .ant-select-disabled {
   background-color: #fafafa !important;
   color: rgba(0, 0, 0, 0.45) !important;
+}
+
+.detail-table-card {
+  margin-top: 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  background: #ffffff;
+  padding: 24px;
+}
+
+.detail-table-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.detail-table-title h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f1f1f;
+}
+
+.error-text {
+  color: #ff4d4f;
+  font-size: 11px;
+  margin-top: 4px;
+  display: block;
 }

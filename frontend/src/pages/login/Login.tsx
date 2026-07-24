@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
-import { Form, Input, Button, Modal, Select, message } from 'antd'
+import { Form, Input, Button, Modal, Select } from 'antd'
 import { UserOutlined, LockOutlined, CheckCircleOutlined } from '@ant-design/icons'
 import { loginApi, getUsersListApi, submitForgotPasswordApi } from '@/api/auth'
 import { useAuth, type User } from '@/context/AuthContext'
+import Feedback from '@/components/Feedback'
 import './Login.css'
 
 interface LoginProps {
@@ -28,8 +29,9 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     setLoading(true)
     try {
       const res = await loginApi(values.username.trim(), values.password.trim())
+      Feedback.handle(res, '登录成功，欢迎回来！')
+      
       if (res.code === 200) {
-        message.success('登录成功，欢迎回来！')
         // 调用 context 里的登录方法，保存状态
         login(res.data.user, res.data.token)
 
@@ -37,11 +39,9 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         if (onLoginSuccess) {
           onLoginSuccess()
         }
-      } else {
-        message.error(res.message || '登录失败')
       }
     } catch (err: any) {
-      message.error(err.message || '账号或密码错误')
+      Feedback.handle(err, undefined, '账号或密码错误')
     } finally {
       setLoading(false)
     }
@@ -54,8 +54,9 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
       // 排除 admin 账号，管理员密码不允许自助发起重置
       const filtered = data.filter(u => u.username !== 'admin')
       setUsers(filtered)
-    } catch (err) {
+    } catch (err: any) {
       console.error('获取用户列表失败', err)
+      Feedback.handle(err, undefined, '获取可重置密码的账号列表失败')
     }
   }
 
@@ -68,15 +69,16 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
 
   const handleForgotPasswordSubmit = async () => {
     if (!selectedUser) {
-      message.error('请选择需要重置密码的账号')
+      Feedback.warning('请选择需要重置密码的账号')
       return
     }
     setSubmitLoading(true)
     try {
-      await submitForgotPasswordApi(selectedUser)
+      const res = await submitForgotPasswordApi(selectedUser)
+      Feedback.handle(res, '密码重置申请提交成功！')
       setIsSubmitSuccess(true)
     } catch (err: any) {
-      message.error(err.message || '提交失败')
+      Feedback.handle(err, undefined, '提交失败')
     } finally {
       setSubmitLoading(false)
     }

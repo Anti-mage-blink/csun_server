@@ -19,8 +19,8 @@ type Quote struct {
 	ContactName  *string    `gorm:"column:contact_name;type:varchar(255)" json:"contact_name"`
 	ContactTitle *string    `gorm:"column:contact_title;type:varchar(255)" json:"contact_title"`
 	ValidDays    *string    `gorm:"column:valid_days;type:varchar(255)" json:"valid_days"`
-	HandlerID    *int32     `gorm:"column:handler_id;type:int unsigned" json:"handler_id"`
-	HandlerName  *string    `gorm:"column:handler_name;type:varchar(255)" json:"handler_name"`
+	CreatorID    *int32     `gorm:"column:creator_id;type:int unsigned" json:"creator_id"`
+	CreatorName  *string    `gorm:"column:creator_name;type:varchar(255)" json:"creator_name"`
 	QuoteDate    *time.Time `gorm:"column:quote_date;type:date" json:"quote_date"`
 }
 

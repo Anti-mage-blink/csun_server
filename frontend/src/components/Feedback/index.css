@@ -1,0 +1,13 @@
+/* index.css */
+/* 反馈提示组件自定义样式 */
+.feedback-placeholder {
+  display: none;
+}
+
+/* 覆盖 antd 默认的 message 样式以提升简约现代化质感 */
+:global(.ant-message-notice-content) {
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  font-weight: 500 !important;
+  padding: 10px 18px !important;
+}

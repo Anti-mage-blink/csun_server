@@ -1,0 +1,10 @@
+.my-applications-page-wrapper {
+  min-height: 100%;
+}
+
+.my-applications-loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}

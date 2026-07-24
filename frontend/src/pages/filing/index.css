@@ -1,0 +1,10 @@
+.filing-page-wrapper {
+  min-height: 100%;
+}
+
+.filing-loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}

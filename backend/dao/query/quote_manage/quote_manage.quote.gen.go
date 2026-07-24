@@ -35,8 +35,8 @@ func newQuote(db *gorm.DB, opts ...gen.DOOption) quote {
 	_quote.ContactName = field.NewString(tableName, "contact_name")
 	_quote.ContactTitle = field.NewString(tableName, "contact_title")
 	_quote.ValidDays = field.NewString(tableName, "valid_days")
-	_quote.HandlerID = field.NewInt32(tableName, "handler_id")
-	_quote.HandlerName = field.NewString(tableName, "handler_name")
+	_quote.CreatorID = field.NewInt32(tableName, "creator_id")
+	_quote.CreatorName = field.NewString(tableName, "creator_name")
 	_quote.QuoteDate = field.NewTime(tableName, "quote_date")
 
 	_quote.fillFieldMap()
@@ -55,8 +55,8 @@ type quote struct {
 	ContactName  field.String
 	ContactTitle field.String
 	ValidDays    field.String
-	HandlerID    field.Int32
-	HandlerName  field.String
+	CreatorID    field.Int32
+	CreatorName  field.String
 	QuoteDate    field.Time
 
 	fieldMap map[string]field.Expr
@@ -81,8 +81,8 @@ func (q *quote) updateTableName(table string) *quote {
 	q.ContactName = field.NewString(table, "contact_name")
 	q.ContactTitle = field.NewString(table, "contact_title")
 	q.ValidDays = field.NewString(table, "valid_days")
-	q.HandlerID = field.NewInt32(table, "handler_id")
-	q.HandlerName = field.NewString(table, "handler_name")
+	q.CreatorID = field.NewInt32(table, "creator_id")
+	q.CreatorName = field.NewString(table, "creator_name")
 	q.QuoteDate = field.NewTime(table, "quote_date")
 
 	q.fillFieldMap()
@@ -108,8 +108,8 @@ func (q *quote) fillFieldMap() {
 	q.fieldMap["contact_name"] = q.ContactName
 	q.fieldMap["contact_title"] = q.ContactTitle
 	q.fieldMap["valid_days"] = q.ValidDays
-	q.fieldMap["handler_id"] = q.HandlerID
-	q.fieldMap["handler_name"] = q.HandlerName
+	q.fieldMap["creator_id"] = q.CreatorID
+	q.fieldMap["creator_name"] = q.CreatorName
 	q.fieldMap["quote_date"] = q.QuoteDate
 }
 

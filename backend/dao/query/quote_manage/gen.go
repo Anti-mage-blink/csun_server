@@ -17,29 +17,31 @@ import (
 
 func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 	return &Query{
-		db:              db,
-		AQuoteItem:      newAQuoteItem(db, opts...),
-		BQuoteItem:      newBQuoteItem(db, opts...),
-		CostWorksheet:   newCostWorksheet(db, opts...),
-		EmployeeRole:    newEmployeeRole(db, opts...),
-		MainCategory:    newMainCategory(db, opts...),
-		ProcessInstance: newProcessInstance(db, opts...),
-		ProductSpec:     newProductSpec(db, opts...),
-		Quote:           newQuote(db, opts...),
+		db:               db,
+		AQuoteItem:       newAQuoteItem(db, opts...),
+		BQuoteItem:       newBQuoteItem(db, opts...),
+		CostWorksheet:    newCostWorksheet(db, opts...),
+		EmployeeRole:     newEmployeeRole(db, opts...),
+		MainCategory:     newMainCategory(db, opts...),
+		ProductSpec:      newProductSpec(db, opts...),
+		Quote:            newQuote(db, opts...),
+		QuoteProcess:     newQuoteProcess(db, opts...),
+		QuoteProcessNode: newQuoteProcessNode(db, opts...),
 	}
 }
 
 type Query struct {
 	db *gorm.DB
 
-	AQuoteItem      aQuoteItem
-	BQuoteItem      bQuoteItem
-	CostWorksheet   costWorksheet
-	EmployeeRole    employeeRole
-	MainCategory    mainCategory
-	ProcessInstance processInstance
-	ProductSpec     productSpec
-	Quote           quote
+	AQuoteItem       aQuoteItem
+	BQuoteItem       bQuoteItem
+	CostWorksheet    costWorksheet
+	EmployeeRole     employeeRole
+	MainCategory     mainCategory
+	ProductSpec      productSpec
+	Quote            quote
+	QuoteProcess     quoteProcess
+	QuoteProcessNode quoteProcessNode
 }
 
 func (q *Query) Available() bool { return q.db != nil }
@@ -48,15 +50,16 @@ func (q *Query) UnderlyingDB() *gorm.DB { return q.db }
 
 func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
-		db:              db,
-		AQuoteItem:      q.AQuoteItem.clone(db),
-		BQuoteItem:      q.BQuoteItem.clone(db),
-		CostWorksheet:   q.CostWorksheet.clone(db),
-		EmployeeRole:    q.EmployeeRole.clone(db),
-		MainCategory:    q.MainCategory.clone(db),
-		ProcessInstance: q.ProcessInstance.clone(db),
-		ProductSpec:     q.ProductSpec.clone(db),
-		Quote:           q.Quote.clone(db),
+		db:               db,
+		AQuoteItem:       q.AQuoteItem.clone(db),
+		BQuoteItem:       q.BQuoteItem.clone(db),
+		CostWorksheet:    q.CostWorksheet.clone(db),
+		EmployeeRole:     q.EmployeeRole.clone(db),
+		MainCategory:     q.MainCategory.clone(db),
+		ProductSpec:      q.ProductSpec.clone(db),
+		Quote:            q.Quote.clone(db),
+		QuoteProcess:     q.QuoteProcess.clone(db),
+		QuoteProcessNode: q.QuoteProcessNode.clone(db),
 	}
 }
 
@@ -70,39 +73,42 @@ func (q *Query) WriteDB() *Query {
 
 func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 	return &Query{
-		db:              db,
-		AQuoteItem:      q.AQuoteItem.replaceDB(db),
-		BQuoteItem:      q.BQuoteItem.replaceDB(db),
-		CostWorksheet:   q.CostWorksheet.replaceDB(db),
-		EmployeeRole:    q.EmployeeRole.replaceDB(db),
-		MainCategory:    q.MainCategory.replaceDB(db),
-		ProcessInstance: q.ProcessInstance.replaceDB(db),
-		ProductSpec:     q.ProductSpec.replaceDB(db),
-		Quote:           q.Quote.replaceDB(db),
+		db:               db,
+		AQuoteItem:       q.AQuoteItem.replaceDB(db),
+		BQuoteItem:       q.BQuoteItem.replaceDB(db),
+		CostWorksheet:    q.CostWorksheet.replaceDB(db),
+		EmployeeRole:     q.EmployeeRole.replaceDB(db),
+		MainCategory:     q.MainCategory.replaceDB(db),
+		ProductSpec:      q.ProductSpec.replaceDB(db),
+		Quote:            q.Quote.replaceDB(db),
+		QuoteProcess:     q.QuoteProcess.replaceDB(db),
+		QuoteProcessNode: q.QuoteProcessNode.replaceDB(db),
 	}
 }
 
 type queryCtx struct {
-	AQuoteItem      IAQuoteItemDo
-	BQuoteItem      IBQuoteItemDo
-	CostWorksheet   ICostWorksheetDo
-	EmployeeRole    IEmployeeRoleDo
-	MainCategory    IMainCategoryDo
-	ProcessInstance IProcessInstanceDo
-	ProductSpec     IProductSpecDo
-	Quote           IQuoteDo
+	AQuoteItem       IAQuoteItemDo
+	BQuoteItem       IBQuoteItemDo
+	CostWorksheet    ICostWorksheetDo
+	EmployeeRole     IEmployeeRoleDo
+	MainCategory     IMainCategoryDo
+	ProductSpec      IProductSpecDo
+	Quote            IQuoteDo
+	QuoteProcess     IQuoteProcessDo
+	QuoteProcessNode IQuoteProcessNodeDo
 }
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
-		AQuoteItem:      q.AQuoteItem.WithContext(ctx),
-		BQuoteItem:      q.BQuoteItem.WithContext(ctx),
-		CostWorksheet:   q.CostWorksheet.WithContext(ctx),
-		EmployeeRole:    q.EmployeeRole.WithContext(ctx),
-		MainCategory:    q.MainCategory.WithContext(ctx),
-		ProcessInstance: q.ProcessInstance.WithContext(ctx),
-		ProductSpec:     q.ProductSpec.WithContext(ctx),
-		Quote:           q.Quote.WithContext(ctx),
+		AQuoteItem:       q.AQuoteItem.WithContext(ctx),
+		BQuoteItem:       q.BQuoteItem.WithContext(ctx),
+		CostWorksheet:    q.CostWorksheet.WithContext(ctx),
+		EmployeeRole:     q.EmployeeRole.WithContext(ctx),
+		MainCategory:     q.MainCategory.WithContext(ctx),
+		ProductSpec:      q.ProductSpec.WithContext(ctx),
+		Quote:            q.Quote.WithContext(ctx),
+		QuoteProcess:     q.QuoteProcess.WithContext(ctx),
+		QuoteProcessNode: q.QuoteProcessNode.WithContext(ctx),
 	}
 }
 
