@@ -48,6 +48,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
         trigger={null}
         collapsedWidth={0}
         width={200}
+        className="no-print"
       >
         <div className={styles.logo}>报价管理系统 v2</div>
         <Menu
@@ -61,7 +62,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
 
       {/* 收起/展开圆形按钮 */}
       <div
-        className={styles.trigger}
+        className={`${styles.trigger} no-print`}
         style={{ left: collapsed ? '12px' : '200px' }}
         onClick={() => setCollapsed(!collapsed)}
         title={collapsed ? '展开侧边栏' : '收起侧边栏'}
@@ -70,7 +71,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
       </div>
 
       <Layout>
-        <Header className={styles.header}>
+        <Header className={`${styles.header} no-print`}>
           {user && (
             <div className={styles.userInfo}>
               <Space className={styles.userText}>

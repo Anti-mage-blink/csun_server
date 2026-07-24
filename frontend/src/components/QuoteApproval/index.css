@@ -158,6 +158,113 @@
   border-radius: 4px;
 }
 
+/* ==========================================================================
+   打印专用样式 (当用户点击“打印”或保存为 PDF 时触发)
+   ========================================================================== */
+@media print {
+  /* 1. 隐藏非打印元素：侧边栏、顶部栏、返回/打印控制栏 */
+  .no-print {
+    display: none !important;
+  }
+
+  /* 2. 覆盖 Ant Design Layout 默认排版，让整个内容区域通宽展示 */
+  html, body, #root, .ant-layout, .ant-layout-content {
+    background: #fff !important;
+    background-color: #fff !important;
+    color: #000 !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* 3. 重置审批详情页容器 */
+  .approve-container {
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: auto !important;
+    background: transparent !important;
+  }
+
+  .approve-details-view {
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    /* 核心优化：等比例放大整体排版（1.15 倍），让打印/保存的 PDF 更加充实饱满 */
+    zoom: 1.15 !important;
+  }
+
+  /* 4. 保持原页面双栏排版：左侧占 7 份，右侧占 3 份 */
+  .detail-layout {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 16px !important;
+    width: 100% !important;
+  }
+
+  .detail-left {
+    flex: 7 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  .detail-right-steps {
+    flex: 3 !important;
+    min-width: 240px !important;
+  }
+
+  /* 5. 确保浏览器在打印时也会渲染背景颜色（如 Tag 标签、表头等） */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* 6. 将卡片阴影重置为简洁细腻的打印边框 */
+  .ant-card {
+    box-shadow: none !important;
+    border: 1px solid #d9d9d9 !important;
+    border-radius: 4px !important;
+    background: #fff !important;
+  }
+
+  .ant-card-head {
+    border-bottom: 1px solid #d9d9d9 !important;
+    background-color: #fafafa !important;
+  }
+
+  /* 7. 表格与描述列表在打印时的细腻化适配 */
+  .ant-table {
+    background: #fff !important;
+  }
+
+  .ant-table-thead > tr > th {
+    background: #fafafa !important;
+    border-bottom: 1px solid #d9d9d9 !important;
+    color: #000 !important;
+  }
+
+  .ant-table-tbody > tr > td {
+    border-bottom: 1px solid #f0f0f0 !important;
+  }
+
+  /* 8. 控制分页，防止单行表格或步骤描述在跨页时被中途切断 */
+  .ant-table-row,
+  .ant-descriptions-row,
+  .ant-steps-item,
+  .step-description-box {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* 9. A4 纸张页面属性配置：提供适度的外边距 */
+  @page {
+    size: auto; /* 自动适配（推荐由用户在打印预览面板中选择纵向/横向，以保留最大灵活性） */
+    margin: 1cm 0.6cm 1cm 0.6cm; /* 缩减左右外边距（从1cm降至0.6cm），为放大的内容腾出空间，使其不溢出页面 */
+  }
+}
+
 /* 渐入动画 */
 .animate-fade-in {
   animation: fadeIn 0.3s ease-out;

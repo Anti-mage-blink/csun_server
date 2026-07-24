@@ -19,7 +19,8 @@ import {
   CloseCircleOutlined, 
   ClockCircleOutlined,
   PlayCircleOutlined,
-  FileTextOutlined
+  FileTextOutlined,
+  PrinterOutlined
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { QuoteProcess, QuoteProcessNode, Quote, QuoteItem } from '@/api/quote'
@@ -395,7 +396,7 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
 
     return (
       <div className="approve-details-view animate-fade-in">
-        <div className="back-bar">
+        <div className="back-bar no-print">
           <Button 
             type="link" 
             icon={<ArrowLeftOutlined />} 
@@ -408,6 +409,16 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
             返回列表
           </Button>
           <span className="detail-title-code">审批详情 - {quote?.quote_code || '未知编号'}</span>
+          {mode === 'filing' && (
+            <Button 
+              type="primary" 
+              icon={<PrinterOutlined />} 
+              onClick={() => window.print()}
+              style={{ marginLeft: 'auto' }}
+            >
+              打印
+            </Button>
+          )}
         </div>
 
         <div className="detail-layout">
