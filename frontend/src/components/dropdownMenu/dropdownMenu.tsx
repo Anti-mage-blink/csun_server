@@ -10,8 +10,12 @@ export interface DropdownMenuProps {
   value?: string;            // 受控 value
   onChange?: (value: string, isNew: boolean, record?: any) => void; // 变更回调，当 isNew 为 true 时，表示为用户手动新增填写
   placeholder?: string;      // 占位提示
+  inputPlaceholder?: string; // 新增填写模式下的输入框占位提示
   style?: React.CSSProperties; // 自定义样式
   className?: string;        // 自定义类名
+  disableAddNew?: boolean;   // 是否完全禁用新增填写功能 (例如产品名称只允许从下拉中选择)
+  disabled?: boolean;        // 是否禁用选择与新增填写
+  forceNewMode?: boolean;    // 外部强制指定是否为“新增填写”模式
 }
 
 export const DropdownMenu: React.FC<DropdownMenuProps> = ({
@@ -21,8 +25,12 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({
   value = '',
   onChange,
   placeholder = '请选择',
+  inputPlaceholder,
   style,
   className,
+  disableAddNew = false,
+  disabled = false,
+  forceNewMode,
 }) => {
   const actualValueField = valueField || displayField;
 
@@ -32,6 +40,9 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({
   const [inputValue, setInputValue] = useState('');
   // 选择框选中的值
   const [selectValue, setSelectValue] = useState<string | undefined>(undefined);
+
+  // 记录上一次的 forceNewMode 状态
+  const prevForceNewModeRef = React.useRef<boolean | undefined>(forceNewMode);
 
   // 根据 records 列表构造 antd 的 options
   const options = records.map((record) => {
@@ -45,35 +56,59 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({
   });
 
   // 在最后追加一个“新增填写”的选项
-  const selectOptions = [
-    ...options,
-    { label: '➕ 新增填写', value: '__ADD_NEW__', record: null },
-  ];
+  const selectOptions = disableAddNew
+    ? options
+    : [
+        ...options,
+        { label: '➕ 新增填写', value: '__ADD_NEW__', record: null },
+      ];
 
-  // 同步外部传入的 value
+  // 同步外部传入的 value 及 forceNewMode 属性
   useEffect(() => {
-    if (value === '') {
-      // 如果值为空，重置状态
-      setIsNewMode(false);
-      setInputValue('');
+    // 1. 如果外部强制开启新增模式
+    if (forceNewMode === true) {
+      setIsNewMode(true);
+      setInputValue(value);
       setSelectValue(undefined);
+      prevForceNewModeRef.current = forceNewMode;
       return;
     }
 
-    // 检查这个值是否在已有的 records 中存在
-    const exists = options.some((opt) => opt.value === value);
+    // 2. 如果 forceNewMode 从 true 变为 false 或 undefined，取消强制新增，切回选择模式
+    if (prevForceNewModeRef.current === true) {
+      setIsNewMode(false);
+      setInputValue('');
+      setSelectValue(undefined);
+      prevForceNewModeRef.current = forceNewMode;
+      return;
+    }
+
+    prevForceNewModeRef.current = forceNewMode;
+
+    // 3. 检查当前 value 是否存在于已有 records 中
+    const exists = options.some((opt) => opt.value === value && value !== '');
 
     if (exists) {
       setIsNewMode(false);
       setSelectValue(value);
       setInputValue('');
+    } else if (value !== '') {
+      if (!disableAddNew) {
+        setIsNewMode(true);
+        setInputValue(value);
+        setSelectValue(undefined);
+      }
     } else {
-      // 外部传入的值不在已有列表中，说明可能处于“新增填写”态
-      setIsNewMode(true);
-      setInputValue(value);
-      setSelectValue(undefined);
+      // value === '' 时：
+      // 如果已处于新增模式（例如刚点击了“➕ 新增填写”导致 onChange('')，或在输入框中清空），保持新增模式并更新 input 框
+      // 如果处于选择模式，维持选择模式，清除下拉选框选中项
+      if (isNewMode) {
+        setInputValue('');
+      } else {
+        setSelectValue(undefined);
+      }
     }
-  }, [value, records, actualValueField, displayField]);
+  }, [value, records, actualValueField, displayField, disableAddNew, forceNewMode]);
 
   // 处理 Select 下拉菜单的选择
   const handleSelectChange = (val: string, option: any) => {
@@ -111,20 +146,27 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({
     }
   };
 
+  // 智能计算 Input 的 placeholder
+  const computedInputPlaceholder =
+    inputPlaceholder ||
+    `请输入${placeholder.replace(/^(请选择|选择)/, '').replace(/或新增填写$/, '') || '内容'}`;
+
   if (isNewMode) {
     return (
       <Space.Compact style={style} className={`dropdown-menu-container ${className || ''}`}>
         <Input
-          placeholder={`请输入新增的${placeholder}`}
+          placeholder={computedInputPlaceholder}
           value={inputValue}
           onChange={handleInputChange}
           allowClear
+          disabled={disabled}
         />
         <Button
           type="primary"
           icon={<RollbackOutlined />}
           onClick={handleRollback}
           title="返回下拉选择"
+          disabled={disabled}
         />
       </Space.Compact>
     );
@@ -133,6 +175,7 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({
   return (
     <Select
       showSearch
+      disabled={disabled}
       style={style}
       className={`dropdown-menu-container ${className || ''}`}
       placeholder={placeholder}

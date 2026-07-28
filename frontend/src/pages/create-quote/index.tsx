@@ -62,6 +62,7 @@ const CreateQuote: React.FC = () => {
   const [uniqueCustomers, setUniqueCustomers] = useState<CustomerRecord[]>([]);
   const [filteredContacts, setFilteredContacts] = useState<CustomerRecord[]>([]);
   const [productSpecsList, setProductSpecsList] = useState<any[]>([]);
+  const [isNewCustomer, setIsNewCustomer] = useState(false);
 
   // ================= 核心双向绑定状态 =================
   // 1. 报价单结构体双向状态 (直接绑定后端返回结构体，并实时更新)
@@ -173,6 +174,8 @@ const CreateQuote: React.FC = () => {
     let customerId: number | null = null;
     let filtered: CustomerRecord[] = [];
 
+    setIsNewCustomer(isNew);
+
     if (!isNew && val) {
       const actualRecord = record || uniqueCustomers.find((c) => c.company_name === val);
       if (actualRecord) {
@@ -189,7 +192,7 @@ const CreateQuote: React.FC = () => {
     let soleContactName = '';
     let soleContactTitle = '';
 
-    if (filtered.length === 1) {
+    if (!isNew && filtered.length === 1) {
       soleContactName = filtered[0].contact_name || '';
       soleContactTitle = filtered[0].contact_title || '';
     }
@@ -354,8 +357,8 @@ const CreateQuote: React.FC = () => {
     for (let i = 0; i < quoteItems.length; i++) {
       const item = quoteItems[i];
       const lineNo = i + 1;
-      if (!item.product_name) {
-        Feedback.error(`明细第 ${lineNo} 行：未输入或选择产品名称`);
+      if (!item.product_spec_id) {
+        Feedback.error(`明细第 ${lineNo} 行：请选择产品名称`);
         return;
       }
       if (!item.order_batch_tier) {
@@ -458,6 +461,7 @@ const CreateQuote: React.FC = () => {
       }]);
 
       setFilteredContacts([]);
+      setIsNewCustomer(false);
     } catch (err: any) {
       Feedback.handle(err, undefined, '保存报价单时发生异常，请重试。');
     } finally {
@@ -480,24 +484,9 @@ const CreateQuote: React.FC = () => {
             displayField="product_name"
             valueField="id"
             value={selectVal}
-            onChange={(val, isNew, specRec) => {
-              if (isNew) {
-                updateRow(record.key, {
-                  product_name: val,
-                  product_spec_id: null,
-                  product_name_id: null,
-                  product_category_id: null,
-                  product_category_name: '',
-                  product_spec: '',
-                  catalog_base_price: 0,
-                  big_batch_price: 0,
-                  middle_small_batch_price: 0,
-                  sample_small_order_price: 0,
-                  high_threshold: 0,
-                  low_threshold: 0,
-                  order_batch_tier: '',
-                });
-              } else if (specRec) {
+            disableAddNew={true}
+            onChange={(_val, _isNew, specRec) => {
+              if (specRec) {
                 updateRow(record.key, {
                   product_name: specRec.product_name,
                   product_spec_id: specRec.id,
@@ -515,7 +504,7 @@ const CreateQuote: React.FC = () => {
                 });
               }
             }}
-            placeholder="请选择或输入"
+            placeholder="请选择产品"
           />
         );
       },
@@ -525,12 +514,11 @@ const CreateQuote: React.FC = () => {
       dataIndex: 'product_category_name',
       key: 'product_category_name',
       width: 130,
-      render: (text: string, record: FormQuoteItem) => (
+      render: (text: string) => (
         <Input
           value={text}
-          disabled={record.product_spec_id !== null}
-          placeholder="自动带出 / 输入"
-          onChange={(e) => updateRow(record.key, { product_category_name: e.target.value })}
+          disabled={true}
+          placeholder="自动带出"
         />
       ),
     },
@@ -539,12 +527,11 @@ const CreateQuote: React.FC = () => {
       dataIndex: 'product_spec',
       key: 'product_spec',
       width: 140,
-      render: (text: string, record: FormQuoteItem) => (
+      render: (text: string) => (
         <Input
           value={text}
-          disabled={record.product_spec_id !== null}
-          placeholder="自动带出 / 输入"
-          onChange={(e) => updateRow(record.key, { product_spec: e.target.value })}
+          disabled={true}
+          placeholder="自动带出"
         />
       ),
     },
@@ -661,6 +648,9 @@ const CreateQuote: React.FC = () => {
     );
   }
 
+  const hasCustomer = Boolean(quote?.customer_name && quote.customer_name.trim());
+  const canEditContact = hasCustomer || isNewCustomer;
+
   return (
     <div className="create-quote-container">
       {/* 报价单基础信息卡片 */}
@@ -676,7 +666,6 @@ const CreateQuote: React.FC = () => {
               <Form.Item label="报价单编号" className="custom-form-item">
                 <Input
                   disabled
-                  style={{ fontWeight: 'bold', color: '#1677ff' }}
                   value={quote?.quote_code || ''}
                 />
               </Form.Item>
@@ -690,6 +679,7 @@ const CreateQuote: React.FC = () => {
                   value={quote?.customer_name || ''}
                   onChange={handleCustomerChange}
                   placeholder="选择已有客户或新增填写"
+                  inputPlaceholder="请输入客户名称"
                 />
               </Form.Item>
             </Col>
@@ -701,7 +691,10 @@ const CreateQuote: React.FC = () => {
                   displayField="contact_name"
                   value={quote?.contact_name || ''}
                   onChange={handleContactChange}
-                  placeholder={quote?.customer_name ? "选择联系人或新增" : "请先选择客户"}
+                  placeholder={canEditContact ? "选择联系人或新增" : "请先选择或填写客户名称"}
+                  inputPlaceholder={canEditContact ? "请输入联系人" : "请先选择或填写客户名称"}
+                  disabled={!canEditContact}
+                  forceNewMode={isNewCustomer ? true : undefined}
                   style={{ width: '100%' }}
                 />
               </Form.Item>
@@ -710,9 +703,10 @@ const CreateQuote: React.FC = () => {
             <Col xs={24} sm={12} md={6}>
               <Form.Item label="职位" className="custom-form-item">
                 <Input
-                  placeholder="联系人职位 (自动带出/可输入)"
+                  placeholder={canEditContact ? "请输入联系人职位" : "请先选择或填写客户名称"}
                   value={quote?.contact_title || ''}
                   onChange={handleTitleChange}
+                  disabled={!canEditContact}
                 />
               </Form.Item>
             </Col>

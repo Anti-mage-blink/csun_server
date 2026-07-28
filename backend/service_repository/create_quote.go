@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"time"
 
@@ -13,6 +14,13 @@ import (
 	quote_query "csun_server-backend/dao/query/quote_manage"
 
 	"gorm.io/gorm"
+)
+
+const (
+	// FloatRateThresholdLow 报价浮动比例第一层审批阈值（5%）
+	FloatRateThresholdLow = 0.05
+	// FloatRateThresholdHigh 报价浮动比例第二层审批阈值（10%）
+	FloatRateThresholdHigh = 0.10
 )
 
 // CreateQuoteData 新建报价单返回给前端的全量数据
@@ -67,7 +75,46 @@ func (r *defaultCreateQuoteRepository) GetAllProductSpecs(ctx context.Context) (
 func (r *defaultCreateQuoteRepository) SaveQuoteWithItems(ctx context.Context, quote *quote_manage.Quote, items []*quote_manage.AQuoteItem, userID int32, userName string) error {
 	return r.db.QuoteManage.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		qQuote := quote_query.Use(tx)
-		qGen := general_query.Use(tx)
+		qGen := general_query.Use(r.db.General)
+
+		// 0. 在数据库 general 数据表 customer 中用前端传来的三字段 company_name、contact_name、contact_title（与关系，同时满足）查询记录
+		var compName, contName, contTitle string
+		if quote.CustomerName != nil {
+			compName = *quote.CustomerName
+		}
+		if quote.ContactName != nil {
+			contName = *quote.ContactName
+		}
+		if quote.ContactTitle != nil {
+			contTitle = *quote.ContactTitle
+		}
+
+		if compName != "" || contName != "" || contTitle != "" {
+			cust, err := qGen.Customer.WithContext(ctx).
+				Where(
+					qGen.Customer.CompanyName.Eq(compName),
+					qGen.Customer.ContactName.Eq(contName),
+					qGen.Customer.ContactTitle.Eq(contTitle),
+				).First()
+
+			if errors.Is(err, gorm.ErrRecordNotFound) || cust == nil {
+				// 若查不到，则给该表新增记录
+				newCust := &general.Customer{
+					CompanyName:  quote.CustomerName,
+					ContactName:  quote.ContactName,
+					ContactTitle: quote.ContactTitle,
+				}
+				if err := qGen.Customer.WithContext(ctx).Create(newCust); err != nil {
+					return err
+				}
+				quote.CustomerID = &newCust.ID // 直接更新为新建客户记录的自增 ID
+			} else if err != nil {
+				return err
+			} else {
+				// 若能查到，同步更新报价单绑定的客户 ID
+				quote.CustomerID = &cust.ID
+			}
+		}
 
 		// 1. 先将报价单写入数据库：quote_manage数据库quote数据表，拿到写入时自增后的id
 		if err := qQuote.Quote.WithContext(ctx).Create(quote); err != nil {
@@ -100,13 +147,15 @@ func (r *defaultCreateQuoteRepository) SaveQuoteWithItems(ctx context.Context, q
 		node1Comment := "无"
 		seqNum1 := int32(1)
 		node1 := &quote_manage.QuoteProcessNode{
-			ProcessID:      &process.ID,
-			SeqNum:         &seqNum1,
-			Name:           &node1Name,
-			Status:         &node1Status,
-			ApproveComment: &node1Comment,
-			CreatedAt:      &createdAtStr,
-			ApproveAt:      &createdAtStr,
+			ProcessID:           &process.ID,
+			SeqNum:              &seqNum1,
+			Name:                &node1Name,
+			ApproveEmployeeID:   &userID,
+			ApproveEmployeeName: &userName,
+			Status:              &node1Status,
+			ApproveComment:      &node1Comment,
+			CreatedAt:           &createdAtStr,
+			ApproveAt:           &createdAtStr,
 		}
 		if err := qQuote.QuoteProcessNode.WithContext(ctx).Create(node1); err != nil {
 			return err
@@ -132,7 +181,10 @@ func (r *defaultCreateQuoteRepository) SaveQuoteWithItems(ctx context.Context, q
 				rateVal = rateVal / 100.0
 			}
 
-			if rateVal < 0.05 {
+			// 取浮动比例绝对值进行判断
+			absRateVal := math.Abs(rateVal)
+
+			if absRateVal < FloatRateThresholdLow {
 				// 根据产品主分类（报价明细第一个.main_category，对应ProductCategoryName）
 				category := ""
 				if items[0].ProductCategoryName != nil {
@@ -145,10 +197,10 @@ func (r *defaultCreateQuoteRepository) SaveQuoteWithItems(ctx context.Context, q
 					targetEmployeeID = 81
 					targetEmployeeName = "李永泉"
 				}
-			} else if rateVal >= 0.05 && rateVal < 0.10 {
+			} else if absRateVal >= FloatRateThresholdLow && absRateVal < FloatRateThresholdHigh {
 				targetEmployeeID = 4
 				targetEmployeeName = "廖语晴"
-			} else if rateVal >= 0.10 {
+			} else if absRateVal >= FloatRateThresholdHigh {
 				targetEmployeeID = 1
 				targetEmployeeName = "肖鹏"
 			}

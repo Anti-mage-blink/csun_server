@@ -3,3 +3,9 @@
 .dropdown-menu-container {
   width: 100%;
 }
+
+.dropdown-menu-container.ant-select-disabled .ant-select-selector,
+.dropdown-menu-container .ant-input-disabled {
+  background-color: #f5f5f5 !important;
+  color: rgba(0, 0, 0, 0.45) !important;
+}

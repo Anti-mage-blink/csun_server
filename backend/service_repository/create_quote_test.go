@@ -148,3 +148,47 @@ func TestCreateQuoteService_PrepareCreateQuote(t *testing.T) {
 		}
 	})
 }
+
+func TestCreateQuoteService_SubmitQuote(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("SubmitQuote nil quote returns error", func(t *testing.T) {
+		mockRepo := newDefaultMockRepo()
+		svc := NewMockCreateQuoteService(mockRepo)
+
+		err := svc.SubmitQuote(ctx, nil, []*quote_manage.AQuoteItem{{}}, 1, "test")
+		if err == nil {
+			t.Error("expected error for nil quote")
+		}
+	})
+
+	t.Run("SubmitQuote empty items returns error", func(t *testing.T) {
+		mockRepo := newDefaultMockRepo()
+		svc := NewMockCreateQuoteService(mockRepo)
+
+		err := svc.SubmitQuote(ctx, &quote_manage.Quote{}, []*quote_manage.AQuoteItem{}, 1, "test")
+		if err == nil {
+			t.Error("expected error for empty items")
+		}
+	})
+
+	t.Run("SubmitQuote success", func(t *testing.T) {
+		mockRepo := newDefaultMockRepo()
+		svc := NewMockCreateQuoteService(mockRepo)
+
+		compName := "测试公司"
+		contName := "张三"
+		contTitle := "经理"
+		q := &quote_manage.Quote{
+			CustomerName: &compName,
+			ContactName:  &contName,
+			ContactTitle: &contTitle,
+		}
+		items := []*quote_manage.AQuoteItem{{}}
+
+		err := svc.SubmitQuote(ctx, q, items, 1, "测试人员")
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+	})
+}

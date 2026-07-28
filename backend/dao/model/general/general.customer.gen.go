@@ -8,7 +8,7 @@ const TableNameCustomer = "general.customer"
 
 // Customer mapped from table <general.customer>
 type Customer struct {
-	ID           int32   `gorm:"column:id;type:int;primaryKey" json:"id"`
+	ID           int32   `gorm:"column:id;type:int unsigned;primaryKey;autoIncrement:true" json:"id"`
 	CompanyName  *string `gorm:"column:company_name;type:varchar(255)" json:"company_name"`
 	ContactName  *string `gorm:"column:contact_name;type:varchar(255)" json:"contact_name"`
 	ContactTitle *string `gorm:"column:contact_title;type:varchar(255)" json:"contact_title"`

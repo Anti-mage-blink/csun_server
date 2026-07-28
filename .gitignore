@@ -48,6 +48,10 @@ logs/
 # ===== 数据库 / 运行时数据 =====
 *.sqlite
 *.sqlite3
+
+# ===== Go Workspace =====
+go.work
+go.work.sum
 server/data/
 
 # ===== Go =====
