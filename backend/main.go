@@ -25,7 +25,7 @@ func init() {
 	}
 }
 
-// initDB 从环境变量读取连接参数并建立 MySQL 连接，不绑定 to 特定数据库
+// initDB 从环境变量读取连接参数并建立 MySQL 连接，不绑定to特定数据库
 func initDB() *sql.DB {
 	// 若未设置环境变量，则使用默认值
 	if os.Getenv("DB_HOST") == "" {
@@ -48,9 +48,23 @@ func initDB() *sql.DB {
 	if err != nil {
 		log.Fatalf("sql.Open 失败: %v", err)
 	}
-	if err := d.Ping(); err != nil {
-		log.Fatalf("数据库 Ping 失败: %v", err)
+
+	// 增加数据库连接重试逻辑，等待 SSH 隧道建立就绪
+	maxRetries := 15
+	var pingErr error
+	for i := 1; i <= maxRetries; i++ {
+		pingErr = d.Ping()
+		if pingErr == nil {
+			if i > 1 {
+				log.Printf("✅ 数据库/SSH 隧道已就绪，连接成功！")
+			}
+			return d
+		}
+		log.Printf("⏳ 等待数据库/SSH 隧道就绪中 (%d/%d)...", i, maxRetries)
+		time.Sleep(1 * time.Second)
 	}
+
+	log.Fatalf("❌ 数据库 Ping 失败 (超过最大重试次数): %v", pingErr)
 	return d
 }
 
@@ -84,9 +98,9 @@ func main() {
 	createQuoteService := service_repository.NewCreateQuoteService(dbEngine)
 	createQuoteHandler := router_handler.NewCreateQuoteHandler(createQuoteService)
 
-	// 初始化 QueryNeedApprove 依赖链
-	queryNeedApproveService := service_repository.NewQueryNeedApproveService(dbEngine)
-	queryNeedApproveHandler := router_handler.NewQueryNeedApproveHandler(queryNeedApproveService)
+	// 初始化 MyApproveQuery 依赖链
+	myApproveQueryService := service_repository.NewMyApproveQueryService(dbEngine)
+	myApproveQueryHandler := router_handler.NewMyApproveQueryHandler(myApproveQueryService)
 
 	// 初始化 FilingLook 依赖链
 	filingLookService := service_repository.NewFilingLookService(dbEngine)
@@ -100,6 +114,10 @@ func main() {
 	approveHandleService := service_repository.NewApproveHandleService(dbEngine)
 	approveHandleHandler := router_handler.NewApproveHandleHandler(approveHandleService)
 
+	// 初始化 WithdrawQuote 依赖链
+	withdrawQuoteService := service_repository.NewWithdrawQuoteService(dbEngine)
+	withdrawQuoteHandler := router_handler.NewWithdrawQuoteHandler(withdrawQuoteService)
+
 	// gin.Default() 创建一个带 Logger 与 Recovery 中间件的引擎
 	r := gin.Default()
 
@@ -109,14 +127,16 @@ func main() {
 	router_handler.RegisterPasswordRoutes(r, passwordHandler)
 	// 注册 CreateQuote 路由
 	router_handler.RegisterCreateQuoteRoutes(r, createQuoteHandler)
-	// 注册 QueryNeedApprove 路由
-	router_handler.RegisterQueryNeedApproveRoutes(r, queryNeedApproveHandler)
+	// 注册 MyApproveQuery 路由
+	router_handler.RegisterMyApproveQueryRoutes(r, myApproveQueryHandler)
 	// 注册 FilingLook 路由
 	router_handler.RegisterFilingLookRoutes(r, filingLookHandler)
 	// 注册 MyApplyQuery 路由
 	router_handler.RegisterMyApplyQueryRoutes(r, myApplyQueryHandler)
 	// 注册 ApproveHandle 路由
 	router_handler.RegisterApproveHandleRoutes(r, approveHandleHandler)
+	// 注册 WithdrawQuote 路由
+	router_handler.RegisterWithdrawQuoteRoutes(r, withdrawQuoteHandler)
 
 	// 根路由：返回 JSON 格式的 Hello World
 	r.GET("/", func(c *gin.Context) {

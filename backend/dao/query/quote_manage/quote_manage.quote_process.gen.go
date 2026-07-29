@@ -32,12 +32,15 @@ func newQuoteProcess(db *gorm.DB, opts ...gen.DOOption) quoteProcess {
 	_quoteProcess.QuoteID = field.NewInt32(tableName, "quote_id")
 	_quoteProcess.CreateEmployeeID = field.NewInt32(tableName, "create_employee_id")
 	_quoteProcess.CreateEmployeeName = field.NewString(tableName, "create_employee_name")
+	_quoteProcess.ApproverID = field.NewInt32(tableName, "approver_id")
+	_quoteProcess.ApproverName = field.NewString(tableName, "approver_name")
 	_quoteProcess.PresentNodeID = field.NewInt32(tableName, "present_node_id")
 	_quoteProcess.PresentNodeName = field.NewString(tableName, "present_node_name")
 	_quoteProcess.PresentStatus = field.NewString(tableName, "present_status")
 	_quoteProcess.PresentApproverID = field.NewInt32(tableName, "present_approver_id")
 	_quoteProcess.PresentApproverName = field.NewString(tableName, "present_approver_name")
 	_quoteProcess.CreatedAt = field.NewString(tableName, "created_at")
+	_quoteProcess.UpdatedAt = field.NewString(tableName, "updated_at")
 
 	_quoteProcess.fillFieldMap()
 
@@ -52,12 +55,15 @@ type quoteProcess struct {
 	QuoteID             field.Int32
 	CreateEmployeeID    field.Int32
 	CreateEmployeeName  field.String
+	ApproverID          field.Int32
+	ApproverName        field.String
 	PresentNodeID       field.Int32
 	PresentNodeName     field.String
 	PresentStatus       field.String
 	PresentApproverID   field.Int32
 	PresentApproverName field.String
 	CreatedAt           field.String
+	UpdatedAt           field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -78,12 +84,15 @@ func (q *quoteProcess) updateTableName(table string) *quoteProcess {
 	q.QuoteID = field.NewInt32(table, "quote_id")
 	q.CreateEmployeeID = field.NewInt32(table, "create_employee_id")
 	q.CreateEmployeeName = field.NewString(table, "create_employee_name")
+	q.ApproverID = field.NewInt32(table, "approver_id")
+	q.ApproverName = field.NewString(table, "approver_name")
 	q.PresentNodeID = field.NewInt32(table, "present_node_id")
 	q.PresentNodeName = field.NewString(table, "present_node_name")
 	q.PresentStatus = field.NewString(table, "present_status")
 	q.PresentApproverID = field.NewInt32(table, "present_approver_id")
 	q.PresentApproverName = field.NewString(table, "present_approver_name")
 	q.CreatedAt = field.NewString(table, "created_at")
+	q.UpdatedAt = field.NewString(table, "updated_at")
 
 	q.fillFieldMap()
 
@@ -100,17 +109,20 @@ func (q *quoteProcess) GetFieldByName(fieldName string) (field.OrderExpr, bool) 
 }
 
 func (q *quoteProcess) fillFieldMap() {
-	q.fieldMap = make(map[string]field.Expr, 10)
+	q.fieldMap = make(map[string]field.Expr, 13)
 	q.fieldMap["id"] = q.ID
 	q.fieldMap["quote_id"] = q.QuoteID
 	q.fieldMap["create_employee_id"] = q.CreateEmployeeID
 	q.fieldMap["create_employee_name"] = q.CreateEmployeeName
+	q.fieldMap["approver_id"] = q.ApproverID
+	q.fieldMap["approver_name"] = q.ApproverName
 	q.fieldMap["present_node_id"] = q.PresentNodeID
 	q.fieldMap["present_node_name"] = q.PresentNodeName
 	q.fieldMap["present_status"] = q.PresentStatus
 	q.fieldMap["present_approver_id"] = q.PresentApproverID
 	q.fieldMap["present_approver_name"] = q.PresentApproverName
 	q.fieldMap["created_at"] = q.CreatedAt
+	q.fieldMap["updated_at"] = q.UpdatedAt
 }
 
 func (q quoteProcess) clone(db *gorm.DB) quoteProcess {

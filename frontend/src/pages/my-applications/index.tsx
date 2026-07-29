@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Spin } from 'antd'
-import { useAuth } from '@/context/AuthContext'
-import { myApplyQueryApi, Quote, QuoteItem, QuoteProcess, QuoteProcessNode } from '@/api/quote'
+import { useAuth } from '@/AuthContext'
+import { myApplyQueryApi, withdrawQuoteApi, Quote, QuoteItem, QuoteProcess, QuoteProcessNode } from '@/api/quote'
 import QuoteApproval from '@/components/QuoteApproval'
 import Feedback from '@/components/Feedback'
 import './index.css'
@@ -54,6 +54,24 @@ const MyApplications: React.FC = () => {
     }
   }, [user])
 
+  const handleWithdraw = async (process: QuoteProcess) => {
+    if (!user) return
+    try {
+      const userName = user.name || ''
+      const res = await withdrawQuoteApi({
+        process_id: process.id,
+        user: {
+          id: user.id,
+          name: userName
+        }
+      })
+      Feedback.handle(res, '撤回报价单成功', '撤回报价单失败')
+      await loadData(true)
+    } catch (err: any) {
+      Feedback.handle(err, undefined, '撤回报价单失败')
+    }
+  }
+
   return (
     <div className="my-applications-page-wrapper">
       {loading && data.quotes.length === 0 ? (
@@ -70,6 +88,7 @@ const MyApplications: React.FC = () => {
           currentUserId={user?.id}
           loading={loading}
           onRefresh={loadData}
+          onWithdraw={handleWithdraw}
           title="我发起的申请"
         />
       )}

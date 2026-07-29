@@ -58,8 +58,10 @@ func (r *defaultApproveHandleRepository) UpdateNodeAndProcessStatus(ctx context.
 			return errors.New("不支持的审批操作")
 		}
 
-		// 3. 更新节点记录
+		// 3. 统一生成当前审批时间字符串，确保节点 approve_at 与审批流 updated_at 为同一个时间
 		nowStr := time.Now().Format("2006-01-02 15:04:05")
+
+		// 4. 更新节点记录
 		node.Status = &statusStr
 		node.ApproveComment = &params.Comment
 		node.ApproveAt = &nowStr
@@ -68,7 +70,7 @@ func (r *defaultApproveHandleRepository) UpdateNodeAndProcessStatus(ctx context.
 			return err
 		}
 
-		// 4. 更新审批流记录
+		// 5. 更新审批流记录
 		process, err := q.QuoteProcess.WithContext(ctx).Where(q.QuoteProcess.ID.Eq(params.ProcessID)).First()
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -78,6 +80,7 @@ func (r *defaultApproveHandleRepository) UpdateNodeAndProcessStatus(ctx context.
 		}
 
 		process.PresentStatus = &statusStr
+		process.UpdatedAt = &nowStr
 		if _, err := q.QuoteProcess.WithContext(ctx).Where(q.QuoteProcess.ID.Eq(params.ProcessID)).Updates(process); err != nil {
 			return err
 		}
@@ -90,7 +93,7 @@ type approveHandleService struct {
 	repo approveHandleRepository
 }
 
-// NewApproveHandleService 创建默认审批处理服务
+// NewApproveHandleService创建默认审批处理服务
 func NewApproveHandleService(db *DBEngine) ApproveHandleService {
 	return &approveHandleService{
 		repo: &defaultApproveHandleRepository{db: db},

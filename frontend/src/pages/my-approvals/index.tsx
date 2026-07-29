@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { Spin, Result } from 'antd'
-import { useAuth } from '@/context/AuthContext'
+import { useAuth } from '@/AuthContext'
 import { 
-  queryNeedApproveApi, 
+  myApproveQueryApi, 
   approveHandleApi,
   QuoteProcess, 
   QuoteProcessNode, 
@@ -44,7 +44,7 @@ const MyApprovals: React.FC = () => {
 
     setLoading(true)
     try {
-      const res = await queryNeedApproveApi(user.id)
+      const res = await myApproveQueryApi(user.id)
       if (!active) return
       setData(res.data)
     } catch (err: any) {
@@ -111,14 +111,7 @@ const MyApprovals: React.FC = () => {
           ...data,
           quote_process_nodes: updatedNodes,
           quote_processes: updatedProcesses,
-          total: updatedProcesses.filter(p => {
-            const myNode = updatedNodes.find(n => 
-              n.process_id === p.id && 
-              n.approve_employee_id === user?.id && 
-              n.status === '待审批'
-            )
-            return !!myNode
-          }).length
+          total: updatedProcesses.length
         })
       }
 

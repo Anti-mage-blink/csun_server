@@ -1,0 +1,29 @@
+.native-data-table-container {
+  width: 100%;
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+}
+
+.native-data-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.native-data-table-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.88);
+}
+
+.native-data-table-meta {
+  font-size: 12px;
+  color: #8c8c8c;
+  margin-left: 8px;
+  font-weight: normal;
+}

@@ -12,12 +12,15 @@ type QuoteProcess struct {
 	QuoteID             *int32  `gorm:"column:quote_id;type:int unsigned" json:"quote_id"`
 	CreateEmployeeID    *int32  `gorm:"column:create_employee_id;type:int unsigned" json:"create_employee_id"`
 	CreateEmployeeName  *string `gorm:"column:create_employee_name;type:varchar(255)" json:"create_employee_name"`
+	ApproverID          *int32  `gorm:"column:approver_id;type:int" json:"approver_id"`
+	ApproverName        *string `gorm:"column:approver_name;type:varchar(255)" json:"approver_name"`
 	PresentNodeID       *int32  `gorm:"column:present_node_id;type:int unsigned" json:"present_node_id"`
 	PresentNodeName     *string `gorm:"column:present_node_name;type:varchar(255)" json:"present_node_name"`
 	PresentStatus       *string `gorm:"column:present_status;type:varchar(255)" json:"present_status"`
 	PresentApproverID   *int32  `gorm:"column:present_approver_id;type:int" json:"present_approver_id"`
 	PresentApproverName *string `gorm:"column:present_approver_name;type:varchar(255)" json:"present_approver_name"`
 	CreatedAt           *string `gorm:"column:created_at;type:varchar(255)" json:"created_at"`
+	UpdatedAt           *string `gorm:"column:updated_at;type:varchar(255)" json:"updated_at"`
 }
 
 // TableName QuoteProcess's table name

@@ -43,7 +43,7 @@ func newAQuoteItem(db *gorm.DB, opts ...gen.DOOption) aQuoteItem {
 	_aQuoteItem.QuoteUnitPrice = field.NewFloat64(tableName, "quote_unit_price")
 	_aQuoteItem.Quantity = field.NewInt32(tableName, "quantity")
 	_aQuoteItem.TotalAmount = field.NewFloat64(tableName, "total_amount")
-	_aQuoteItem.IsBelowPriceFloor = field.NewBool(tableName, "is_below_price_floor")
+	_aQuoteItem.IsBelowFloorPrice = field.NewBool(tableName, "is_below_floor_price")
 	_aQuoteItem.CreatedAt = field.NewTime(tableName, "created_at")
 	_aQuoteItem.UpdatedAt = field.NewTime(tableName, "updated_at")
 
@@ -71,7 +71,7 @@ type aQuoteItem struct {
 	QuoteUnitPrice      field.Float64
 	Quantity            field.Int32
 	TotalAmount         field.Float64
-	IsBelowPriceFloor   field.Bool
+	IsBelowFloorPrice   field.Bool
 	CreatedAt           field.Time
 	UpdatedAt           field.Time
 
@@ -105,7 +105,7 @@ func (a *aQuoteItem) updateTableName(table string) *aQuoteItem {
 	a.QuoteUnitPrice = field.NewFloat64(table, "quote_unit_price")
 	a.Quantity = field.NewInt32(table, "quantity")
 	a.TotalAmount = field.NewFloat64(table, "total_amount")
-	a.IsBelowPriceFloor = field.NewBool(table, "is_below_price_floor")
+	a.IsBelowFloorPrice = field.NewBool(table, "is_below_floor_price")
 	a.CreatedAt = field.NewTime(table, "created_at")
 	a.UpdatedAt = field.NewTime(table, "updated_at")
 
@@ -140,7 +140,7 @@ func (a *aQuoteItem) fillFieldMap() {
 	a.fieldMap["quote_unit_price"] = a.QuoteUnitPrice
 	a.fieldMap["quantity"] = a.Quantity
 	a.fieldMap["total_amount"] = a.TotalAmount
-	a.fieldMap["is_below_price_floor"] = a.IsBelowPriceFloor
+	a.fieldMap["is_below_floor_price"] = a.IsBelowFloorPrice
 	a.fieldMap["created_at"] = a.CreatedAt
 	a.fieldMap["updated_at"] = a.UpdatedAt
 }

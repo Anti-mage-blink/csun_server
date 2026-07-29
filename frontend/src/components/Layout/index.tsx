@@ -2,18 +2,11 @@ import { type ReactNode, useState } from 'react'
 import { Layout, Menu, Button, Popconfirm, Space } from 'antd'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { LogoutOutlined, UserOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons'
-import { useAuth } from '@/context/AuthContext'
+import { useAuth } from '@/AuthContext'
+import { getMenuItemsByRole } from '@/roleMenuConfig'
 import styles from './index.module.css'
 
 const { Sider, Content, Header } = Layout
-
-// 定义所有的菜单项及其对应的角色权限
-const ALL_MENU_ITEMS = [
-  { key: '/create-quote', label: '新建报价单', roles: ['市场部', '管理员','工作小组组长-光伏热场', '工作小组组长-摩擦', '上帝'] },
-  { key: '/filing', label: '备案查看', roles: ['财务部', '管理员', '上帝'] },
-  { key: '/my-applications', label: '我的申请', roles: ['市场部', '上帝'] },
-  { key: '/my-approvals', label: '我的审批', roles: ['领导小组组长', '领导小组副组长', '工作小组组长-光伏热场', '工作小组组长-摩擦', '上帝'] },
-]
 
 interface AppLayoutProps {
   children: ReactNode
@@ -29,11 +22,8 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   const { user, logout } = useAuth()
   const [collapsed, setCollapsed] = useState(false)
 
-  // 根据当前用户的角色过滤菜单项
-  const menuItems = ALL_MENU_ITEMS.filter(item => {
-    if (!user) return false
-    return item.roles.includes(user.role)
-  })
+  // 读取当前登录用户，根据角色功能映射给出功能子页面（顺序符合映射列表顺序）
+  const menuItems = getMenuItemsByRole(user?.role)
 
   const handleLogout = () => {
     logout()
@@ -77,7 +67,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
               <Space className={styles.userText}>
                 <UserOutlined />
                 <span>欢迎您，</span>
-                <span className={styles.username}>{user.username}</span>
+                <span className={styles.username}>{user.name}</span>
                 <span className={styles.roleTag}>{user.role}</span>
               </Space>
               

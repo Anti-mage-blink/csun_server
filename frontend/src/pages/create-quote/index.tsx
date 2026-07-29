@@ -16,7 +16,7 @@ import {
 } from 'antd';
 import { SaveOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/AuthContext';
 import DropdownMenu from '@/components/dropdownMenu';
 import { enterCreateQuoteApi, submitQuoteApi, type CustomerRecord, type Quote, type SubmitQuotePayload } from '@/api/quote';
 import Feedback from '@/components/Feedback';
@@ -41,7 +41,7 @@ interface FormQuoteItem {
   quote_unit_price: number;
   quantity: number | null;
   total_amount: number;
-  is_below_price_floor: boolean;
+  is_below_floor_price: boolean;
 
   // 联动及校验所需的宽表缓存字段
   high_threshold: number;
@@ -88,7 +88,7 @@ const CreateQuote: React.FC = () => {
           ...(res.data.quote || {}),
           valid_days: '30',
           creator_id: user?.id ? Number(user.id) : null,
-          creator_name: user?.username || '未知经办人',
+          creator_name: user?.name || '未知经办人',
           quote_date: dayjs().format('YYYY-MM-DD'),
           customer_name: '',
           contact_name: '',
@@ -116,7 +116,7 @@ const CreateQuote: React.FC = () => {
           quote_unit_price: 0,
           quantity: null,
           total_amount: 0,
-          is_below_price_floor: false,
+          is_below_floor_price: false,
           high_threshold: 0,
           low_threshold: 0,
           big_batch_price: 0,
@@ -319,7 +319,7 @@ const CreateQuote: React.FC = () => {
       quote_unit_price: 0,
       quantity: null,
       total_amount: 0,
-      is_below_price_floor: false,
+      is_below_floor_price: false,
       high_threshold: 0,
       low_threshold: 0,
       big_batch_price: 0,
@@ -409,11 +409,11 @@ const CreateQuote: React.FC = () => {
           quote_unit_price: item.quote_unit_price || 0,
           quantity: Number(item.quantity || 0),
           total_amount: item.total_amount || 0,
-          is_below_price_floor: (item.quote_float_rate || 0) < 0,
+          is_below_floor_price: (item.quote_float_rate || 0) < 0,
         })),
         user: {
           id: user?.id ? Number(user.id) : 0,
-          name: user?.username || '未知经办人',
+          name: user?.name || '未知经办人',
         },
       };
 
@@ -426,7 +426,7 @@ const CreateQuote: React.FC = () => {
         ...(initData.data.quote || {}),
         valid_days: '30',
         creator_id: user?.id ? Number(user.id) : null,
-        creator_name: user?.username || '未知经办人',
+        creator_name: user?.name || '未知经办人',
         quote_date: dayjs().format('YYYY-MM-DD'),
         customer_name: '',
         contact_name: '',
@@ -452,7 +452,7 @@ const CreateQuote: React.FC = () => {
         quote_unit_price: 0,
         quantity: null,
         total_amount: 0,
-        is_below_price_floor: false,
+        is_below_floor_price: false,
         high_threshold: 0,
         low_threshold: 0,
         big_batch_price: 0,

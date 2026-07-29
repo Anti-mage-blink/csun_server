@@ -27,7 +27,7 @@ type AQuoteItem struct {
 	QuoteUnitPrice      *float64   `gorm:"column:quote_unit_price;type:decimal(10,2)" json:"quote_unit_price"`
 	Quantity            *int32     `gorm:"column:quantity;type:int" json:"quantity"`
 	TotalAmount         *float64   `gorm:"column:total_amount;type:decimal(10,2) unsigned" json:"total_amount"`
-	IsBelowPriceFloor   *bool      `gorm:"column:is_below_price_floor;type:tinyint(1)" json:"is_below_price_floor"`
+	IsBelowFloorPrice   *bool      `gorm:"column:is_below_floor_price;type:tinyint(1)" json:"is_below_floor_price"`
 	CreatedAt           *time.Time `gorm:"column:created_at;type:datetime" json:"created_at"`
 	UpdatedAt           *time.Time `gorm:"column:updated_at;type:datetime" json:"updated_at"`
 }

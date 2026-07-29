@@ -5,34 +5,21 @@ import CreateQuote from '@/pages/create-quote'
 import Filing from '@/pages/filing'
 import MyApplications from '@/pages/my-applications'
 import MyApprovals from '@/pages/my-approvals'
-import { AuthProvider, useAuth } from '@/context/AuthContext'
+import TestPage from '@/pages/test-page'
+import { AuthProvider, useAuth } from '@/AuthContext'
 import { Spin } from 'antd'
+import { ROLE_FUNCTIONS_MAP } from '@/roleMenuConfig'
 
 function AppRoutes() {
   const { user } = useAuth()
 
-  // 根据角色自动确定默认跳转的页面
+  // 根据角色自动确定默认跳转的页面（读取当前登录用户的角色功能映射，给出列表中第一个功能子页面）
   const getDefaultRedirect = () => {
     if (!user) return '/login'
     
-    // 管理员角色默认拥有所有功能，重定向至新建报价单或首个可用功能
-    if (user.role === '管理员' || user.role === '上帝') {
-      return '/create-quote'
-    }
-    
-    if (user.role === '市场部') {
-      return '/create-quote'
-    }
-    if (user.role === '财务部') {
-      return '/filing'
-    }
-    if (
-      user.role === '领导小组副组长' || 
-      user.role === '领导小组组长' || 
-      user.role === '工作小组组长-光伏热场' || 
-      user.role === '工作小组组长-摩擦'
-    ) {
-      return '/my-approvals'
+    const userFunctions = ROLE_FUNCTIONS_MAP[user.role]
+    if (userFunctions && userFunctions.length > 0) {
+      return userFunctions[0]
     }
     return '/create-quote' // 其它未知角色默认跳转
   }
@@ -44,6 +31,7 @@ function AppRoutes() {
       <Route path="/filing" element={<Filing />} />
       <Route path="/my-applications" element={<MyApplications />} />
       <Route path="/my-approvals" element={<MyApprovals />} />
+      <Route path="/test-page" element={<TestPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

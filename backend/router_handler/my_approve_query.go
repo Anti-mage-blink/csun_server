@@ -9,26 +9,26 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// QueryNeedApproveHandler 待审批查询的 Handler
-type QueryNeedApproveHandler struct {
-	service service_repository.QueryNeedApproveService
+// MyApproveQueryHandler 待审批查询的 Handler
+type MyApproveQueryHandler struct {
+	service service_repository.MyApproveQueryService
 }
 
-// NewQueryNeedApproveHandler 创建一个待审批查询 Handler 实例
-func NewQueryNeedApproveHandler(service service_repository.QueryNeedApproveService) *QueryNeedApproveHandler {
-	return &QueryNeedApproveHandler{service: service}
+// NewMyApproveQueryHandler 创建一个待审批查询 Handler 实例
+func NewMyApproveQueryHandler(service service_repository.MyApproveQueryService) *MyApproveQueryHandler {
+	return &MyApproveQueryHandler{service: service}
 }
 
-// RegisterQueryNeedApproveRoutes 注册待审批查询相关的路由
-func RegisterQueryNeedApproveRoutes(r *gin.Engine, h *QueryNeedApproveHandler) {
+// RegisterMyApproveQueryRoutes 注册待审批查询相关的路由
+func RegisterMyApproveQueryRoutes(r *gin.Engine, h *MyApproveQueryHandler) {
 	api := r.Group("/api")
 	{
-		api.GET("/approve/query_need_approve", h.QueryNeedApprove)
+		api.GET("/approve/my_approve_query", h.MyApproveQuery)
 	}
 }
 
-// QueryNeedApprove 处理待我审批接口请求
-func (h *QueryNeedApproveHandler) QueryNeedApprove(c *gin.Context) {
+// MyApproveQuery 处理待我审批接口请求
+func (h *MyApproveQueryHandler) MyApproveQuery(c *gin.Context) {
 	// 支持兼容多种入参名称：user_id, userId, id
 	userIDStr := c.Query("user_id")
 	if userIDStr == "" {
@@ -49,7 +49,7 @@ func (h *QueryNeedApproveHandler) QueryNeedApprove(c *gin.Context) {
 		return
 	}
 
-	data, err := h.service.QueryNeedApprove(c.Request.Context(), int32(userID))
+	data, err := h.service.MyApproveQuery(c.Request.Context(), int32(userID))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "查询待审批数据失败: " + err.Error()})
 		return

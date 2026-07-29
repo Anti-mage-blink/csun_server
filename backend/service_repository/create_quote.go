@@ -121,9 +121,24 @@ func (r *defaultCreateQuoteRepository) SaveQuoteWithItems(ctx context.Context, q
 			return err
 		}
 
-		// 2. 再将这个id填入到每个报价明细单结构体quote_id中，再写入quote_manage数据库A_quote_item数据表
+		// 2. 再将这个id填入到每个报价明细单结构体quote_id中，填写Is_below_floor_price， 再写入quote_manage数据库A_quote_item数据表
 		for _, item := range items {
 			item.QuoteID = &quote.ID
+
+			// 判断单价（quote_unit_price）是否小于该产品 product_spec 记录的底价（floor_price）：若小于则为 true，否则为 false
+			isBelow := false
+			if item.ProductSpecID != nil && item.QuoteUnitPrice != nil {
+				spec, err := qQuote.ProductSpec.WithContext(ctx).Where(qQuote.ProductSpec.ID.Eq(*item.ProductSpecID)).First()
+				if err == nil && spec != nil && spec.FloorPrice != nil {
+					if *item.QuoteUnitPrice < *spec.FloorPrice {
+						isBelow = true
+					} else {
+						isBelow = false
+					}
+				}
+			}
+			item.IsBelowFloorPrice = &isBelow
+
 			if err := qQuote.AQuoteItem.WithContext(ctx).Create(item); err != nil {
 				return err
 			}
@@ -131,11 +146,14 @@ func (r *defaultCreateQuoteRepository) SaveQuoteWithItems(ctx context.Context, q
 
 		// 3. 新创建报价审批流记录：即quote_manage.quote_process
 		createdAtStr := time.Now().Format("2006-01-02 15:04:05")
+		defaultStatus := "待审批"
 		process := &quote_manage.QuoteProcess{
 			QuoteID:            &quote.ID,
 			CreateEmployeeID:   &userID,
 			CreateEmployeeName: &userName,
+			PresentStatus:      &defaultStatus,
 			CreatedAt:          &createdAtStr,
+			UpdatedAt:          &createdAtStr,
 		}
 		if err := qQuote.QuoteProcess.WithContext(ctx).Create(process); err != nil {
 			return err
@@ -230,11 +248,15 @@ func (r *defaultCreateQuoteRepository) SaveQuoteWithItems(ctx context.Context, q
 		}
 
 		// 7. 再回填刚刚新建报价单的一些字段（其实是指审批流记录 quote_process 的字段）
+		process.ApproverID = &targetEmployeeID
+		process.ApproverName = &targetEmployeeName
 		process.PresentNodeID = &node2.ID
 		process.PresentNodeName = &node2Name
 		process.PresentApproverID = node2.ApproveEmployeeID
 		process.PresentApproverName = node2.ApproveEmployeeName
+		process.PresentStatus = &defaultStatus
 		process.CreatedAt = &createdAtStr
+		process.UpdatedAt = &createdAtStr
 
 		if _, err := qQuote.QuoteProcess.WithContext(ctx).Where(qQuote.QuoteProcess.ID.Eq(process.ID)).Updates(process); err != nil {
 			return err

@@ -37,6 +37,7 @@ func newProductSpec(db *gorm.DB, opts ...gen.DOOption) productSpec {
 	_productSpec.BigBatchPrice = field.NewFloat64(tableName, "big_batch_price")
 	_productSpec.MiddleBatchPrice = field.NewFloat64(tableName, "middle_batch_price")
 	_productSpec.SmallBatchPrice = field.NewFloat64(tableName, "small_batch_price")
+	_productSpec.FloorPrice = field.NewFloat64(tableName, "floor_price")
 
 	_productSpec.fillFieldMap()
 
@@ -56,6 +57,7 @@ type productSpec struct {
 	BigBatchPrice    field.Float64
 	MiddleBatchPrice field.Float64
 	SmallBatchPrice  field.Float64
+	FloorPrice       field.Float64
 
 	fieldMap map[string]field.Expr
 }
@@ -81,6 +83,7 @@ func (p *productSpec) updateTableName(table string) *productSpec {
 	p.BigBatchPrice = field.NewFloat64(table, "big_batch_price")
 	p.MiddleBatchPrice = field.NewFloat64(table, "middle_batch_price")
 	p.SmallBatchPrice = field.NewFloat64(table, "small_batch_price")
+	p.FloorPrice = field.NewFloat64(table, "floor_price")
 
 	p.fillFieldMap()
 
@@ -97,7 +100,7 @@ func (p *productSpec) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (p *productSpec) fillFieldMap() {
-	p.fieldMap = make(map[string]field.Expr, 9)
+	p.fieldMap = make(map[string]field.Expr, 10)
 	p.fieldMap["id"] = p.ID
 	p.fieldMap["main_category"] = p.MainCategory
 	p.fieldMap["product_name"] = p.ProductName
@@ -107,6 +110,7 @@ func (p *productSpec) fillFieldMap() {
 	p.fieldMap["big_batch_price"] = p.BigBatchPrice
 	p.fieldMap["middle_batch_price"] = p.MiddleBatchPrice
 	p.fieldMap["small_batch_price"] = p.SmallBatchPrice
+	p.fieldMap["floor_price"] = p.FloorPrice
 }
 
 func (p productSpec) clone(db *gorm.DB) productSpec {

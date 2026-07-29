@@ -73,7 +73,7 @@ export interface SubmitQuotePayload {
     quote_unit_price: number;
     quantity: number;
     total_amount: number;
-    is_below_price_floor: boolean;
+    is_below_floor_price: boolean;
   }>;
   user: {
     id: number;
@@ -101,9 +101,15 @@ export interface QuoteProcess {
   quote_id: number | null;
   create_employee_id: number | null;
   create_employee_name: string | null;
+  approver_id?: number | null;
+  approver_name?: string | null;
   present_approver_id?: number | null;
   present_approver_name?: string | null;
   present_node_id?: number | null;
+  present_node_name?: string | null;
+  present_status?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
 export interface QuoteProcessNode {
@@ -135,10 +141,10 @@ export interface QuoteItem {
   quote_unit_price?: number | null;
   quantity?: number | null;
   total_amount?: number | null;
-  is_below_price_floor?: boolean | null;
+  is_below_floor_price?: boolean | null;
 }
 
-export interface QueryNeedApproveData {
+export interface MyApproveQueryData {
   total: number;
   quote_processes: QuoteProcess[];
   quote_process_nodes: QuoteProcessNode[];
@@ -146,17 +152,17 @@ export interface QueryNeedApproveData {
   quote_items: QuoteItem[];
 }
 
-export interface QueryNeedApproveResponse {
+export interface MyApproveQueryResponse {
   message: string;
-  data: QueryNeedApproveData;
+  data: MyApproveQueryData;
 }
 
 /**
  * 查询待审批数据
  */
-export const queryNeedApproveApi = async (userId: number): Promise<QueryNeedApproveResponse> => {
+export const myApproveQueryApi = async (userId: number): Promise<MyApproveQueryResponse> => {
   try {
-    const res = await request.get<QueryNeedApproveResponse>('/approve/query_need_approve', {
+    const res = await request.get<MyApproveQueryResponse>('/approve/my_approve_query', {
       params: { user_id: userId }
     });
     return res.data;
@@ -245,3 +251,31 @@ export const approveHandleApi = async (payload: ApproveHandlePayload): Promise<A
     throw new Error(error.message || '连接服务器失败，审批操作处理失败');
   }
 };
+
+export interface WithdrawQuotePayload {
+  process_id: number;
+  user: {
+    id: number;
+    name: string;
+  };
+}
+
+export interface WithdrawQuoteResponse {
+  message: string;
+}
+
+/**
+ * 撤回报价单接口
+ */
+export const withdrawQuoteApi = async (payload: WithdrawQuotePayload): Promise<WithdrawQuoteResponse> => {
+  try {
+    const res = await request.post<WithdrawQuoteResponse>('/quote/withdraw_quote', payload);
+    return res.data;
+  } catch (error: any) {
+    if (error.response && error.response.data) {
+      throw new Error(error.response.data.message || '撤回报价单失败');
+    }
+    throw new Error(error.message || '连接服务器失败，撤回报价单失败');
+  }
+};
+

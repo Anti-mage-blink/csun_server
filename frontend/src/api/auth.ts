@@ -1,5 +1,5 @@
 import request from './request'
-import { type User } from '@/context/AuthContext'
+import { type User } from '@/AuthContext'
 
 export interface LoginResponse {
   code: number
@@ -28,9 +28,9 @@ export const loginApi = async (username: string, password: string): Promise<Logi
     console.log('[Login API Debug] 收到后端返回原始数据:', backendData)
     
     // 2. 💡 将后端的 Employee 模型转换适配为前端期望的 LoginResponse 契约
-    const mappedUser = {
+    const mappedUser: User = {
       id: backendData.data.id,
-      username: backendData.data.name || username,
+      name: backendData.data.name || username,
       role: backendData.data.role || '普通员工', // 使用后端返回的特定角色字段
       wecomId: '' // 暂无
     }

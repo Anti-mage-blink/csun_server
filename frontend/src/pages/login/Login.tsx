@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Form, Input, Button, Modal, Select } from 'antd'
 import { UserOutlined, LockOutlined, CheckCircleOutlined } from '@ant-design/icons'
 import { loginApi, getUsersListApi, submitForgotPasswordApi } from '@/api/auth'
-import { useAuth, type User } from '@/context/AuthContext'
+import { useAuth, type User } from '@/AuthContext'
 import Feedback from '@/components/Feedback'
 import './Login.css'
 
@@ -52,7 +52,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     try {
       const data = await getUsersListApi()
       // 排除 admin 账号，管理员密码不允许自助发起重置
-      const filtered = data.filter(u => u.username !== 'admin')
+      const filtered = data.filter(u => u.name !== 'admin')
       setUsers(filtered)
     } catch (err: any) {
       console.error('获取用户列表失败', err)
@@ -183,7 +183,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
               >
                 {users.map((u) => (
                   <Option key={u.id} value={u.id}>
-                    {u.username}（{u.role}）
+                    {u.name}（{u.role}）
                   </Option>
                 ))}
               </Select>

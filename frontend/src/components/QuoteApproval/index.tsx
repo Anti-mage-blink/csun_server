@@ -11,7 +11,8 @@ import {
   Descriptions, 
   Steps, 
   Divider, 
-  Typography
+  Typography,
+  Popconfirm
 } from 'antd'
 import { 
   ArrowLeftOutlined, 
@@ -20,7 +21,8 @@ import {
   ClockCircleOutlined,
   PlayCircleOutlined,
   FileTextOutlined,
-  PrinterOutlined
+  PrinterOutlined,
+  RollbackOutlined
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { QuoteProcess, QuoteProcessNode, Quote, QuoteItem } from '@/api/quote'
@@ -59,6 +61,9 @@ export interface QuoteApprovalProps {
     comment: string
   ) => Promise<void> | void;
 
+  // 撤回报价单回调（仅在 mode === 'my-submit' 且点击撤回时触发）
+  onWithdraw?: (process: QuoteProcess) => Promise<void> | void;
+
   // 组件自定义大标题，若不提供则根据 mode 自动选择默认值
   title?: string;
 }
@@ -73,15 +78,17 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
   loading = false,
   onRefresh,
   onApprove,
+  onWithdraw,
   title
 }) => {
   // 页面切换控制 ('list' | 'detail')
   const [view, setView] = useState<'list' | 'detail'>('list')
   const [selectedProcess, setSelectedProcess] = useState<QuoteProcess | null>(null)
   
-  // 审批操作状态
+  // 审批/撤回操作状态
   const [approveComment, setApproveComment] = useState<string>('')
   const [submitting, setSubmitting] = useState<boolean>(false)
+  const [withdrawing, setWithdrawing] = useState<boolean>(false)
 
   // --------------------------------------------------------
   // 数据过滤与逻辑关联
@@ -115,25 +122,82 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
     return undefined
   }
 
-  // 3. 根据 mode 过滤需要展示的审批流主表列表
+  // 3. 根据 mode 过滤与排序需要展示的审批流主表列表
   const getFilteredProcesses = (): QuoteProcess[] => {
+    let list: QuoteProcess[] = []
+
     if (mode === 'my-submit' && currentUserId !== undefined) {
       // 我发起的审批：过滤出发起人是当前用户的流程
-      return quoteProcesses.filter(p => p.create_employee_id === currentUserId)
+      list = quoteProcesses.filter(p => p.create_employee_id === currentUserId)
+    } else if (mode === 'approve' && currentUserId !== undefined) {
+      // 我的审批：展示当前审批人的所有流程（包含“待审批”及已审批的“历史记录”）
+      list = quoteProcesses.filter(p => p.approver_id === currentUserId || p.approver_id === undefined || p.approver_id === null)
+      if (list.length === 0 && quoteProcesses.length > 0) {
+        list = quoteProcesses
+      }
+    } else {
+      // 备案查看（或其他情况）：不过滤，全量展示
+      list = quoteProcesses
     }
-    
-    if (mode === 'approve' && currentUserId !== undefined) {
-      // 待我审批：寻找包含“当前用户待审批节点”的流程
-      const myPendingNodeProcessIds = quoteProcessNodes
-        .filter(n => n.approve_employee_id === currentUserId && n.status === '待审批')
-        .map(n => n.process_id)
-      
-      const processIdSet = new Set(myPendingNodeProcessIds)
-      return quoteProcesses.filter(p => processIdSet.has(p.id))
+
+    // 辅助获取报价日期毫秒戳
+    const getQuoteTime = (process: QuoteProcess): number => {
+      const quote = getProcessQuote(process)
+      if (!quote || !quote.quote_date) return 0
+      const t = dayjs(quote.quote_date).valueOf()
+      return isNaN(t) ? 0 : t
     }
-    
-    // 备案查看（或其他情况）：不过滤，全量展示
-    return quoteProcesses
+
+    // 辅助获取更新时间毫秒戳
+    const getUpdateTime = (process: QuoteProcess): number => {
+      const rawUpdate = process.updated_at || process.created_at
+      if (!rawUpdate) {
+        const currentNode = getProcessCurrentNode(process)
+        const nodeTime = currentNode?.approve_at || currentNode?.created_at
+        if (nodeTime) {
+          const nt = dayjs(nodeTime).valueOf()
+          if (!isNaN(nt)) return nt
+        }
+        return 0
+      }
+      const t = dayjs(rawUpdate).valueOf()
+      return isNaN(t) ? 0 : t
+    }
+
+    // 按报价日期降序 -> 更新时间降序
+    const compareByDateAndUpdated = (a: QuoteProcess, b: QuoteProcess): number => {
+      const timeQuoteA = getQuoteTime(a)
+      const timeQuoteB = getQuoteTime(b)
+      if (timeQuoteA !== timeQuoteB) {
+        return timeQuoteB - timeQuoteA // 降序（越新的日期靠前）
+      }
+
+      const timeUpdateA = getUpdateTime(a)
+      const timeUpdateB = getUpdateTime(b)
+      if (timeUpdateA !== timeUpdateB) {
+        return timeUpdateB - timeUpdateA // 降序（越新的时间靠前）
+      }
+
+      return b.id - a.id
+    }
+
+    return [...list].sort((a, b) => {
+      if (mode === 'filing') {
+        // 备案查看 mode：默认排序先按报价日期（quote.quote_date）降序、对于报价日期相同再按更新时间（quote_process.updated_at）降序
+        return compareByDateAndUpdated(a, b)
+      } else {
+        // 我的申请 (my-submit) 和 我的审批 (approve) mode：
+        // 先分为“待审批”（quote_process.present_status）部分和其余部分（待审批部分在其余部分之前）
+        const isPendingA = (a.present_status || '待审批') === '待审批'
+        const isPendingB = (b.present_status || '待审批') === '待审批'
+
+        if (isPendingA && !isPendingB) return -1
+        if (!isPendingA && isPendingB) return 1
+
+        // 内部再按报价日期降序、对于报价日期相同再按更新时间降序
+        return compareByDateAndUpdated(a, b)
+      }
+    })
   }
 
   const filteredProcesses = getFilteredProcesses()
@@ -170,6 +234,19 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
   }
 
   // --------------------------------------------------------
+  // 撤回操作处理
+  // --------------------------------------------------------
+  const handleWithdrawAction = async (process: QuoteProcess) => {
+    if (!onWithdraw) return
+    setWithdrawing(true)
+    try {
+      await onWithdraw(process)
+    } finally {
+      setWithdrawing(false)
+    }
+  }
+
+  // --------------------------------------------------------
   // 页面一：渲染审批页面（列表总览）
   // --------------------------------------------------------
   const renderListView = () => {
@@ -177,6 +254,13 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
       const quote = getProcessQuote(process)
       const currentNode = getProcessCurrentNode(process)
       const rawQuoteDate = quote?.quote_date || '';
+
+      const rawTime = mode === 'approve' 
+        ? (currentNode?.created_at || process.created_at || process.updated_at)
+        : (process.updated_at || process.created_at || currentNode?.approve_at || currentNode?.created_at)
+
+      const displayTime = rawTime ? dayjs(rawTime).format('YYYY/M/D HH:mm:ss') : '未知时间'
+
       return {
         key: process.id,
         process,
@@ -188,58 +272,71 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
         quote_date: rawQuoteDate ? dayjs(rawQuoteDate).format('YYYY-MM-DD') : '未知日期',
         currentNodeName: currentNode?.name || '审批完成',
         currentNodeStatus: currentNode?.status || '已结束',
-        created_at: currentNode?.created_at ? new Date(currentNode.created_at).toLocaleString() : '未知时间'
+        created_at: displayTime
       }
     })
 
-    const columns = [
+    const columns: any[] = [
       {
         title: '报价单编号',
         dataIndex: 'quote_code',
         key: 'quote_code',
+        align: 'center',
         render: (text: string) => <span className="highlight-code">{text}</span>
       },
       {
         title: '客户名称',
         dataIndex: 'customer_name',
         key: 'customer_name',
+        align: 'center',
       },
       {
         title: '市场部经办人',
         dataIndex: 'creator_name',
         key: 'creator_name',
+        align: 'center',
         render: (text: string) => <Tag color="blue">{text}</Tag>
       },
       {
         title: '报价日期',
         dataIndex: 'quote_date',
         key: 'quote_date',
+        align: 'center',
       },
       {
         title: '审批阶段',
         dataIndex: 'currentNodeName',
         key: 'currentNodeName',
-        render: (text: string, record: any) => {
+        align: 'center',
+        render: (_: string, record: any) => {
+          const status = record.process?.present_status || record.currentNodeStatus || '待审批'
           let color = 'orange'
           let icon = <ClockCircleOutlined />
-          if (record.currentNodeStatus === '已通过') {
+          let className = ''
+          if (status === '已通过') {
             color = 'green'
             icon = <CheckCircleOutlined />
-          } else if (record.currentNodeStatus === '已拒绝') {
+          } else if (status === '已拒绝') {
             color = 'red'
             icon = <CloseCircleOutlined />
+          } else if (status === '已撤回') {
+            color = 'default'
+            icon = <RollbackOutlined />
+            className = 'tag-withdrawn'
           }
-          return <Tag color={color} icon={icon}>{text} ({record.currentNodeStatus})</Tag>
+          return <Tag color={color} icon={icon} className={className}>{status}</Tag>
         }
       },
       {
         title: mode === 'approve' ? '接收时间' : '最后更新时间',
         dataIndex: 'created_at',
         key: 'created_at',
+        align: 'center',
       },
       {
         title: '操作',
         key: 'action',
+        align: 'center',
         render: (_: any, record: any) => (
           <Button 
             type="primary" 
@@ -257,7 +354,7 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
 
     // 确定默认标题
     const displayTitle = title || (
-      mode === 'approve' ? '待我审批' :
+      mode === 'approve' ? '我的审批' :
       mode === 'my-submit' ? '我发起的审批' : '备案查看'
     )
 
@@ -296,14 +393,16 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
   const renderDetailView = () => {
     if (!selectedProcess) return null
 
-    const quote = getProcessQuote(selectedProcess)
+    // 优先从最新列表数据中查寻最新状态的流程记录，保持页面位置不变
+    const currentProcess = quoteProcesses.find(p => p.id === selectedProcess.id) || selectedProcess
+    const quote = getProcessQuote(currentProcess)
     
     // 获取当前报价单关联的所有明细单
-    const items = quoteItems.filter(item => item.quote_id === selectedProcess.quote_id)
+    const items = quoteItems.filter(item => item.quote_id === currentProcess.quote_id)
     
     // 获取该审批流程的所有节点列表，并优先按 seq_num 顺序排序，展现完整的审批流轨迹
     const nodes = quoteProcessNodes
-      .filter(node => node.process_id === selectedProcess.id)
+      .filter(node => node.process_id === currentProcess.id)
       .sort((a, b) => {
         const seqA = a.seq_num !== undefined && a.seq_num !== null ? a.seq_num : a.id;
         const seqB = b.seq_num !== undefined && b.seq_num !== null ? b.seq_num : b.id;
@@ -315,6 +414,22 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
     
     // 当前我的审批节点（仅在审批模式下起作用）
     const myCurrentPendingNode = mode === 'approve' ? getProcessCurrentNode(selectedProcess) : undefined
+
+    // 渲染审批单状态 Tag（待审批: 黄色 / 已通过: 绿色 / 已拒绝: 红色 / 已撤回: 灰色）
+    const renderProcessStatusTag = (status?: string | null) => {
+      const statusVal = status || '待审批'
+      let color = 'gold'
+      let className = ''
+      if (statusVal === '已通过') {
+        color = 'green'
+      } else if (statusVal === '已拒绝') {
+        color = 'red'
+      } else if (statusVal === '已撤回') {
+        color = 'default'
+        className = 'tag-withdrawn'
+      }
+      return <Tag color={color} className={className}>{statusVal}</Tag>
+    }
 
     // 明细表列定义
     const itemColumns = [
@@ -388,8 +503,8 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
       },
       {
         title: '是否低于底线价',
-        dataIndex: 'is_below_price_floor',
-        key: 'is_below_price_floor',
+        dataIndex: 'is_below_floor_price',
+        key: 'is_below_floor_price',
         render: (isBelow: boolean) => isBelow ? <Tag color="error">低于底价</Tag> : <Tag color="success">正常</Tag>
       }
     ]
@@ -418,6 +533,25 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
             >
               打印
             </Button>
+          )}
+          {mode === 'my-submit' && onWithdraw && (!currentProcess.present_status || currentProcess.present_status === '待审批') && (
+            <Popconfirm
+              title="确定撤回该报价单吗？"
+              description="撤回后当前审批流将被终止"
+              onConfirm={() => handleWithdrawAction(currentProcess)}
+              okText="确定"
+              cancelText="取消"
+            >
+              <Button 
+                type="default"
+                className="btn-withdraw"
+                icon={<RollbackOutlined />} 
+                loading={withdrawing}
+                style={{ marginLeft: 'auto' }}
+              >
+                撤回
+              </Button>
+            </Popconfirm>
           )}
         </div>
 
@@ -491,14 +625,22 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
 
           {/* 右侧：整个审批流节点跟踪 */}
           <div className="detail-right-steps">
-            <Card title="报价审批流跟踪" className="card-shadow full-height-card">
+            <Card 
+              title={
+                <Space align="center">
+                  <span>报价审批流跟踪</span>
+                  {renderProcessStatusTag(currentProcess.present_status)}
+                </Space>
+              } 
+              className="card-shadow full-height-card"
+            >
               {nodes.length === 0 ? (
                 <Empty description="暂无审批流程记录" />
               ) : (
                 <Steps
                   direction="vertical"
                   current={currentStepIndex === -1 ? nodes.length : currentStepIndex}
-                  status={currentStepIndex === -1 ? 'finish' : 'process'}
+                  status={currentProcess.present_status === '已撤回' ? 'wait' : (currentStepIndex === -1 ? 'finish' : 'process')}
                   size="small"
                 >
                   {nodes.map((node) => {
@@ -506,7 +648,21 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
                     let icon = <ClockCircleOutlined />
                     let titleColor = 'gray'
 
-                    if (node.status === '已通过') {
+                    const isWithdrawn = currentProcess.present_status === '已撤回'
+
+                    if (isWithdrawn) {
+                      stepStatus = 'wait'
+                      titleColor = '#8c8c8c'
+                      if (node.status === '已通过') {
+                        icon = <CheckCircleOutlined style={{ color: '#8c8c8c' }} />
+                      } else if (node.status === '已拒绝') {
+                        icon = <CloseCircleOutlined style={{ color: '#8c8c8c' }} />
+                      } else if (node.status === '待审批') {
+                        icon = <PlayCircleOutlined style={{ color: '#8c8c8c' }} />
+                      } else {
+                        icon = <ClockCircleOutlined style={{ color: '#8c8c8c' }} />
+                      }
+                    } else if (node.status === '已通过') {
                       stepStatus = 'finish'
                       icon = <CheckCircleOutlined style={{ color: '#52c41a' }} />
                       titleColor = '#52c41a'
