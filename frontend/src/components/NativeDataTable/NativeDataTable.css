@@ -1,11 +1,41 @@
-/* NativeDataTable 样式定义 */
+/* ==========================================
+   NativeDataTable 现代超级表格组件样式
+   设计风格：Modern Admin / Clean & Elegant
+   ========================================== */
+
 .native-data-table-wrapper {
-  background-color: #ffffff;
-  padding: 16px;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #eef1f6;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  padding: 20px;
+  transition: all 0.25s ease-in-out;
 }
 
+/* 头部标题区域 */
+.native-data-table-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1d2129;
+  letter-spacing: -0.2px;
+}
+
+.native-data-table-title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: #e6f4ff;
+  color: #1677ff;
+  font-size: 15px;
+}
+
+/* 工具栏样式 */
 .native-data-table-toolbar {
   display: flex;
   align-items: center;
@@ -13,33 +43,212 @@
 }
 
 .native-data-table-search-input {
-  width: 260px;
+  width: 280px;
 }
 
-.native-data-table-action-link {
+.native-data-table-search-input.ant-input-affix-wrapper {
+  border-radius: 8px;
+  border-color: #e5e6eb;
+  transition: all 0.2s ease;
+}
+
+.native-data-table-search-input.ant-input-affix-wrapper:hover,
+.native-data-table-search-input.ant-input-affix-wrapper-focused {
+  border-color: #1677ff;
+  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
+}
+
+.native-data-table-create-btn {
+  border-radius: 8px;
+  font-weight: 500;
+  box-shadow: 0 2px 6px rgba(22, 119, 255, 0.25);
+  transition: all 0.2s ease;
+}
+
+.native-data-table-create-btn:hover {
+  box-shadow: 0 4px 12px rgba(22, 119, 255, 0.35);
+  transform: translateY(-1px);
+}
+
+.native-data-table-refresh-btn {
+  border-radius: 8px;
+  color: #86909c;
+  border-color: #e5e6eb;
+}
+
+.native-data-table-refresh-btn:hover {
   color: #1677ff;
-  cursor: pointer;
-  user-select: none;
+  border-color: #1677ff;
 }
 
-.native-data-table-action-link:hover {
-  color: #4096ff;
-  text-decoration: underline;
+/* ==========================================
+   表格主体与单元格样式打磨
+   ========================================== */
+
+.native-data-table-wrapper .ant-pro-card-body {
+  padding: 0 !important;
 }
 
-.native-data-table-action-delete {
-  color: #ff4d4f;
-  cursor: pointer;
-  user-select: none;
+.native-data-table-wrapper .ant-table {
+  border-radius: 8px;
+  overflow: hidden;
 }
 
-.native-data-table-action-delete:hover {
-  color: #ff7875;
-  text-decoration: underline;
-}
-
-/* 单元格单行显示不折行，超出时出现横向滑动条 */
-.native-data-table-wrapper .ant-table-cell {
+/* 表头样式 */
+.native-data-table-wrapper .ant-table-thead > tr > th {
+  background: #f7f8fa !important;
+  color: #4e5969 !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  border-bottom: 1px solid #f0f0f0 !important;
+  padding: 12px 16px !important;
   white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.native-data-table-wrapper .ant-table-thead > tr > th:hover {
+  background: #f2f3f5 !important;
+}
+
+/* 表格体单元格样式 */
+.native-data-table-wrapper .ant-table-tbody > tr > td {
+  padding: 13px 16px !important;
+  font-size: 13px;
+  color: #1d2129;
+  border-bottom: 1px solid #f2f3f5 !important;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+
+.native-data-table-wrapper .ant-table-tbody > tr:hover > td {
+  background-color: #f7f9fc !important;
+}
+
+/* 单元格字段值阵列定制组件 */
+
+/* 1. 空值展示 */
+.ndt-empty-cell {
+  color: #c9cdd4;
+  font-weight: 400;
+  user-select: none;
+}
+
+/* 2. Select 分类 Tag 标签 */
+.ndt-select-tag {
+  margin: 0;
+  padding: 2px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid #e6f4ff;
+  background: #f0f7ff;
+  color: #0958d9;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1.5;
+}
+
+/* 3. 数值/金额 单元格 */
+.ndt-number-cell {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  color: #1d2129;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.ndt-price-cell {
+  color: #0f766e; /* 典雅深青绿/财报金融风格数值 */
+  font-weight: 600;
+}
+
+.ndt-currency-symbol {
+  font-size: 11px;
+  color: #14b8a6;
+  font-weight: 600;
+  margin-right: 1px;
+}
+
+.ndt-number-val {
+  letter-spacing: 0.3px;
+}
+
+/* 4. 日期 单元格 */
+.ndt-date-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #4e5969;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ndt-date-icon {
+  color: #86909c;
+  font-size: 13px;
+}
+
+/* 5. 文本 单元格 */
+.ndt-text-cell {
+  color: #4e5969;
+}
+
+.ndt-primary-text {
+  color: #1d2129;
+  font-weight: 500;
+}
+
+/* 6. 操作按钮 */
+.ndt-action-btn {
+  border-radius: 6px !important;
+  font-size: 12px !important;
+  height: 28px !important;
+  padding: 0 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  transition: all 0.15s ease !important;
+}
+
+.ndt-action-btn.edit {
+  color: #1677ff !important;
+}
+
+.ndt-action-btn.edit:hover {
+  background: #e6f4ff !important;
+  color: #0958d9 !important;
+}
+
+.ndt-action-btn.delete {
+  color: #ff4d4f !important;
+}
+
+.ndt-action-btn.delete:hover {
+  background: #fff0f0 !important;
+  color: #cf1322 !important;
+}
+
+.ndt-action-icon {
+  font-size: 12px;
+}
+
+/* 自定义的软滑条滚动样式 */
+.native-data-table-wrapper .ant-table-body::-webkit-scrollbar,
+.native-data-table-wrapper .ant-table-content::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.native-data-table-wrapper .ant-table-body::-webkit-scrollbar-thumb,
+.native-data-table-wrapper .ant-table-content::-webkit-scrollbar-thumb {
+  background: #e5e6eb;
+  border-radius: 4px;
+}
+
+.native-data-table-wrapper .ant-table-body::-webkit-scrollbar-thumb:hover,
+.native-data-table-wrapper .ant-table-content::-webkit-scrollbar-thumb:hover {
+  background: #c9cdd4;
 }
 

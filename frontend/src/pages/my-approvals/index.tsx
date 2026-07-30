@@ -46,6 +46,7 @@ const MyApprovals: React.FC = () => {
     try {
       const res = await myApproveQueryApi(user.id)
       if (!active) return
+      Feedback.handle(res, undefined, '获取待审批列表失败')
       setData(res.data)
     } catch (err: any) {
       if (!active) return

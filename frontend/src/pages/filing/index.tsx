@@ -24,6 +24,7 @@ const Filing: React.FC = () => {
     try {
       const res = await filingLookApi()
       if (!active) return
+      Feedback.handle(res, undefined, '获取全量备案数据失败')
       setData({
         quotes: res.data.quotes,
         quoteItems: res.data.quote_items,

@@ -66,8 +66,9 @@ const AppLayout = ({ children }: AppLayoutProps) => {
             <div className={styles.userInfo}>
               <Space className={styles.userText}>
                 <UserOutlined />
-                <span>欢迎您，</span>
-                <span className={styles.username}>{user.name}</span>
+                <span>
+                  欢迎您，<span className={styles.username}>{user.name}</span>
+                </span>
                 <span className={styles.roleTag}>{user.role}</span>
               </Space>
               

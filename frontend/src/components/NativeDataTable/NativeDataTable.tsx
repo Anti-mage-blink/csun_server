@@ -10,14 +10,23 @@ import {
   type ActionType,
   type ProColumns,
 } from '@ant-design/pro-components';
-import { Button, Input, Popconfirm, message, Space } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Button, Input, Popconfirm, Space, Tag } from 'antd';
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  SearchOutlined,
+  TableOutlined,
+  CalendarOutlined,
+  ReloadOutlined,
+} from '@ant-design/icons';
 import {
   fetchDataTableData,
   createDataTableRecord,
   updateDataTableRecord,
   deleteDataTableRecord,
 } from '../../api/dataTable';
+import Feedback from '../Feedback';
 import './NativeDataTable.css';
 
 /**
@@ -258,7 +267,7 @@ export const NativeDataTable: React.FC<NativeDataTableProps> = ({
 
   // 1. 构造 ProTable 列定义 columns，接入 fieldLabelMap 的对应关系与 fieldTypesMap 类型
   const columns: ProColumns<Record<string, any>>[] = useMemo(() => {
-    const cols: ProColumns<Record<string, any>>[] = showFields.map((field) => {
+    const cols: ProColumns<Record<string, any>>[] = showFields.map((field, colIndex) => {
       const isSelect = Boolean(selectFieldsMap[field]);
       const valueEnum = valueEnumMap[field];
       const options = finalRelationOptionsMap[field];
@@ -281,6 +290,66 @@ export const NativeDataTable: React.FC<NativeDataTableProps> = ({
         valueType,
         valueEnum: isSelect && valueEnum ? valueEnum : undefined,
         fieldProps: isSelect ? { options } : undefined,
+        render: (dom, record) => {
+          const rawValue = record[field];
+
+          // 1. 空值优雅渲染 (null, undefined, '')
+          if (rawValue === null || rawValue === undefined || rawValue === '') {
+            return <span className="ndt-empty-cell">—</span>;
+          }
+
+          // 2. 下拉/关联分类选择框 (Tag 呈现)
+          if (isSelect) {
+            let labelText: React.ReactNode = dom;
+            if (valueEnum && valueEnum[rawValue]?.text) {
+              labelText = valueEnum[rawValue].text;
+            } else if (options) {
+              const matchOpt = options.find(
+                (opt) => opt.value === rawValue || String(opt.value) === String(rawValue)
+              );
+              if (matchOpt) labelText = matchOpt.label;
+            }
+
+            return <Tag className="ndt-select-tag">{labelText}</Tag>;
+          }
+
+          // 3. 数字 / 价格类型 (tabular-nums 财务级排版)
+          if (fieldType === 'number' || fieldType === 'digit') {
+            const isPrice = /price|cost|amount|fee|money/i.test(field);
+            const num = Number(rawValue);
+
+            if (!isNaN(num)) {
+              const formattedNum = num.toLocaleString('zh-CN', {
+                maximumFractionDigits: 4,
+              });
+
+              return (
+                <span className={`ndt-number-cell ${isPrice ? 'ndt-price-cell' : ''}`}>
+                  {isPrice && <span className="ndt-currency-symbol">￥</span>}
+                  <span className="ndt-number-val">{formattedNum}</span>
+                </span>
+              );
+            }
+          }
+
+          // 4. 日期类型 (附带微型日历图标)
+          if (fieldType === 'date') {
+            return (
+              <span className="ndt-date-cell">
+                <CalendarOutlined className="ndt-date-icon" />
+                <span>{String(rawValue)}</span>
+              </span>
+            );
+          }
+
+          // 5. 文本/其他类型 (首列突出主标题感)
+          const isFirstCol = colIndex === 0;
+          return (
+            <span className={`ndt-text-cell ${isFirstCol ? 'ndt-primary-text' : ''}`}>
+              {dom}
+            </span>
+          );
+        },
       };
     });
 
@@ -290,31 +359,46 @@ export const NativeDataTable: React.FC<NativeDataTableProps> = ({
       valueType: 'option',
       key: 'option',
       width: 140,
+      fixed: 'right',
       render: (_, record) => (
-        <Space size="middle">
-          <a
-            className="native-data-table-action-link"
+        <Space size={4}>
+          <Button
+            type="text"
+            size="small"
+            icon={<EditOutlined className="ndt-action-icon edit" />}
+            className="ndt-action-btn edit"
             onClick={() => {
               setEditingRecord(record);
               setModalOpen(true);
             }}
           >
             编辑
-          </a>
+          </Button>
           <Popconfirm
             title="确定要删除此条记录吗？"
+            description="删除后将无法恢复"
             okText="确定"
             cancelText="取消"
+            okButtonProps={{ danger: true, size: 'small' }}
+            cancelButtonProps={{ size: 'small' }}
             onConfirm={() => handleDelete(record.id)}
           >
-            <a className="native-data-table-action-delete">删除</a>
+            <Button
+              type="text"
+              danger
+              size="small"
+              icon={<DeleteOutlined className="ndt-action-icon delete" />}
+              className="ndt-action-btn delete"
+            >
+              删除
+            </Button>
           </Popconfirm>
         </Space>
       ),
     });
 
     return cols;
-  }, [showFields, selectFieldsMap, valueEnumMap, finalRelationOptionsMap, fieldLabelMap]);
+  }, [showFields, selectFieldsMap, valueEnumMap, finalRelationOptionsMap, fieldLabelMap, fieldTypesMap]);
 
   // 2. 删除逻辑 (优先使用外部 onDelete 回调，默认调用专用 data_table 后端接口)
   const handleDelete = async (id: number | string) => {
@@ -323,16 +407,16 @@ export const NativeDataTable: React.FC<NativeDataTableProps> = ({
         await onDelete(id);
       } else if (dataSource) {
         setLocalData((prev) => prev.filter((item) => item.id !== id));
-        message.success('记录已从前端列表中移除');
+        Feedback.success('记录已从前端列表中移除');
       } else {
         // 调用通用 data_table 删接口
-        await deleteDataTableRecord(tableStr, id);
-        message.success('记录删除成功');
+        const res = await deleteDataTableRecord(tableStr, id);
+        Feedback.handle(res, '记录删除成功', '删除记录失败');
       }
       actionRef.current?.reload();
       onDataChange?.();
     } catch (err: any) {
-      message.error(err.message || '删除记录失败');
+      Feedback.handle(err, undefined, '删除记录失败');
     }
   };
 
@@ -361,11 +445,11 @@ export const NativeDataTable: React.FC<NativeDataTableProps> = ({
           setLocalData((prev) =>
             prev.map((item) => (item.id === editingRecord.id ? { ...item, ...recordStruct } : item))
           );
-          message.success('记录更新成功');
+          Feedback.success('记录更新成功');
         } else {
           // 调用通用 data_table 改接口
-          await updateDataTableRecord(tableStr, editingRecord.id, recordStruct);
-          message.success('记录修改成功');
+          const res = await updateDataTableRecord(tableStr, editingRecord.id, recordStruct);
+          Feedback.handle(res, '记录修改成功', '修改记录失败');
         }
       } else {
         // 新增操作
@@ -374,11 +458,11 @@ export const NativeDataTable: React.FC<NativeDataTableProps> = ({
         } else if (dataSource) {
           const newRecord = { id: Date.now(), ...recordStruct };
           setLocalData((prev) => [newRecord, ...prev]);
-          message.success('新记录添加成功');
+          Feedback.success('新记录添加成功');
         } else {
           // 调用通用 data_table 增接口
-          await createDataTableRecord(tableStr, recordStruct);
-          message.success('记录新增成功');
+          const res = await createDataTableRecord(tableStr, recordStruct);
+          Feedback.handle(res, '记录新增成功', '新增记录失败');
         }
       }
 
@@ -387,7 +471,7 @@ export const NativeDataTable: React.FC<NativeDataTableProps> = ({
       onDataChange?.();
       return true;
     } catch (err: any) {
-      message.error(err.message || '保存记录失败');
+      Feedback.handle(err, undefined, '保存记录失败');
       return false;
     }
   };
@@ -397,7 +481,14 @@ export const NativeDataTable: React.FC<NativeDataTableProps> = ({
       <ProTable<Record<string, any>>
         actionRef={actionRef}
         rowKey="id"
-        headerTitle={title || tableDisplayName}
+        headerTitle={
+          <div className="native-data-table-title">
+            <span className="native-data-table-title-icon">
+              <TableOutlined />
+            </span>
+            <span>{title || tableDisplayName}</span>
+          </div>
+        }
         options={{ density: false }}
         columns={columns}
         scroll={{ x: 'max-content' }}
@@ -422,6 +513,7 @@ export const NativeDataTable: React.FC<NativeDataTableProps> = ({
             // 补全对专用 data_table 查接口的调用：获取主表全量数据及所有关联数据表
             try {
               const res = await fetchDataTableData(tableStr, allRelationTables);
+              Feedback.handle(res, undefined, '通过 data_table 接口加载数据失败');
               rawList = res.data || [];
 
               // 自动将后端返回的关联表 relations 转化为下拉框选项格式
@@ -443,7 +535,7 @@ export const NativeDataTable: React.FC<NativeDataTableProps> = ({
                 setFetchedRelationOptionsMap(newOptionsMap);
               }
             } catch (err: any) {
-              message.error(err.message || '通过 data_table 接口加载数据失败');
+              Feedback.handle(err, undefined, '通过 data_table 接口加载数据失败');
               rawList = localData;
             }
           }
@@ -494,20 +586,38 @@ export const NativeDataTable: React.FC<NativeDataTableProps> = ({
         // 关闭内置的多输入框 Search Form，在工具栏展现统一的上方模糊搜索框
         search={false}
         toolBarRender={() => [
-          <Input.Search
+          <Input
             key="fuzzy-search"
             className="native-data-table-search-input"
             placeholder="在表格字段中模糊搜索..."
+            prefix={<SearchOutlined style={{ color: '#c9cdd4' }} />}
             allowClear
-            onSearch={(value) => {
-              setSearchKeyword(value);
+            value={searchKeyword}
+            onChange={(e) => {
+              const val = e.target.value;
+              setSearchKeyword(val);
+              if (val === '') {
+                actionRef.current?.reload();
+              }
+            }}
+            onPressEnter={() => {
               actionRef.current?.reload();
             }}
+          />,
+          <Button
+            key="refresh-btn"
+            className="native-data-table-refresh-btn"
+            icon={<ReloadOutlined />}
+            onClick={() => {
+              actionRef.current?.reload();
+            }}
+            title="刷新表格"
           />,
           <Button
             key="create-btn"
             type="primary"
             icon={<PlusOutlined />}
+            className="native-data-table-create-btn"
             onClick={() => {
               setEditingRecord(null);
               setModalOpen(true);
