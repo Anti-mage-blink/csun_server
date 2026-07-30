@@ -44,16 +44,25 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({
   // 记录上一次的 forceNewMode 状态
   const prevForceNewModeRef = React.useRef<boolean | undefined>(forceNewMode);
 
-  // 根据 records 列表构造 antd 的 options
-  const options = records.map((record) => {
-    const val = String(record[actualValueField] || '');
-    const label = String(record[displayField] || '');
-    return {
-      label,
-      value: val,
-      record,
-    };
-  });
+  // 根据 records 列表构造 antd 的 options，自动过滤掉 displayField 或 valueField 为空的无效记录
+  const options = records
+    .filter((record) => {
+      if (!record) return false;
+      const label = record[displayField];
+      const val = record[actualValueField];
+      const labelStr = label !== null && label !== undefined ? String(label).trim() : '';
+      const valStr = val !== null && val !== undefined ? String(val).trim() : '';
+      return labelStr !== '' && valStr !== '';
+    })
+    .map((record) => {
+      const val = String(record[actualValueField] || '');
+      const label = String(record[displayField] || '');
+      return {
+        label,
+        value: val,
+        record,
+      };
+    });
 
   // 在最后追加一个“新增填写”的选项
   const selectOptions = disableAddNew

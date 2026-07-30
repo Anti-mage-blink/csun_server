@@ -125,13 +125,13 @@ const CreateQuote: React.FC = () => {
         };
         setQuoteItems([defaultRow]); // 单元素数组初始化
 
-        // 客户列表去重逻辑
+        // 客户列表去重逻辑（过滤掉公司名为空的情况）
         const rawCustomers = res.data.customers || [];
         setAllCustomers(rawCustomers);
 
         const uniqueMap = new Map<string, CustomerRecord>();
         rawCustomers.forEach((item) => {
-          if (item.company_name) {
+          if (item.company_name && item.company_name.trim()) {
             if (!uniqueMap.has(item.company_name)) {
               uniqueMap.set(item.company_name, item);
             }
@@ -182,7 +182,10 @@ const CreateQuote: React.FC = () => {
         customerId = actualRecord.id;
       }
       filtered = allCustomers.filter(
-        (c) => c.company_name?.toLowerCase() === val.toLowerCase()
+        (c) =>
+          c.company_name?.toLowerCase() === val.toLowerCase() &&
+          c.contact_name &&
+          c.contact_name.trim() !== ''
       );
     }
 

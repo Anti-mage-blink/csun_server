@@ -18,6 +18,7 @@ type ProductSpec struct {
 	MiddleBatchPrice *float64 `gorm:"column:middle_batch_price;type:decimal(10,2)" json:"middle_batch_price"`
 	SmallBatchPrice  *float64 `gorm:"column:small_batch_price;type:decimal(10,2)" json:"small_batch_price"`
 	FloorPrice       *float64 `gorm:"column:floor_price;type:decimal(10,2)" json:"floor_price"`
+	IsDeleted        *bool    `gorm:"column:is_deleted;type:tinyint(1)" json:"is_deleted"`
 }
 
 // TableName ProductSpec's table name

@@ -39,6 +39,11 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
+/* 表格单元格单行显示不折行，超出时出现横向滑动条 */
+.approve-container .ant-table-cell {
+  white-space: nowrap;
+}
+
 .highlight-code {
   font-family: 'Courier New', Courier, monospace;
   font-weight: bold;

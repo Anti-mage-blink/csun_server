@@ -9,7 +9,7 @@ export const MENU_ITEM_MAP: Record<string, MenuItemConfig> = {
   '/filing': { key: '/filing', label: '备案查看' },
   '/my-applications': { key: '/my-applications', label: '我的申请' },
   '/my-approvals': { key: '/my-approvals', label: '我的审批' },
-  '/test-page': { key: '/test-page', label: '测试页面' },
+  '/product-manage': { key: '/product-manage', label: '产品管理' },
 }
 
 /**
@@ -18,13 +18,12 @@ export const MENU_ITEM_MAP: Record<string, MenuItemConfig> = {
  */
 export const ROLE_FUNCTIONS_MAP: Record<string, string[]> = {
   '市场部': ['/create-quote', '/my-applications'],
-  '财务部': ['/filing'],
-  '领导小组组长': ['/my-approvals', '/filing'],
-  '领导小组副组长': ['/my-approvals', '/filing'],
+  '财务部': ['/filing', '/product-manage'],
+  '领导小组组长': ['/my-approvals', '/filing', '/product-manage'],
+  '领导小组副组长': ['/my-approvals', '/filing', '/product-manage'],
   '工作小组组长-光伏热场': ['/create-quote', '/my-approvals'],
   '工作小组组长-摩擦': ['/create-quote', '/my-approvals'],
-  '管理员': ['/create-quote', '/filing'],
-  '上帝': ['/create-quote', '/filing', '/my-applications', '/my-approvals', '/test-page'],
+  '上帝': ['/create-quote', '/filing', '/my-applications', '/my-approvals', '/product-manage'],
 }
 
 /**

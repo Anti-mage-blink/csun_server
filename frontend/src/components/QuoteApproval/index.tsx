@@ -377,6 +377,7 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
             dataSource={listDataSource} 
             columns={columns} 
             loading={loading}
+            scroll={{ x: 'max-content' }}
             locale={{ 
               emptyText: <Empty description={`当前没有相关的报价审批单数据`} /> 
             }}
@@ -581,6 +582,7 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
                 rowKey="id" 
                 pagination={false} 
                 size="small"
+                scroll={{ x: 'max-content' }}
               />
             </Card>
 

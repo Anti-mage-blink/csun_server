@@ -118,6 +118,10 @@ func main() {
 	withdrawQuoteService := service_repository.NewWithdrawQuoteService(dbEngine)
 	withdrawQuoteHandler := router_handler.NewWithdrawQuoteHandler(withdrawQuoteService)
 
+	// 初始化 DataTable 依赖链
+	dataTableService := service_repository.NewDataTableService(dbEngine)
+	dataTableHandler := router_handler.NewDataTableHandler(dataTableService)
+
 	// gin.Default() 创建一个带 Logger 与 Recovery 中间件的引擎
 	r := gin.Default()
 
@@ -137,6 +141,8 @@ func main() {
 	router_handler.RegisterApproveHandleRoutes(r, approveHandleHandler)
 	// 注册 WithdrawQuote 路由
 	router_handler.RegisterWithdrawQuoteRoutes(r, withdrawQuoteHandler)
+	// 注册 DataTable 路由
+	router_handler.RegisterDataTableRoutes(r, dataTableHandler)
 
 	// 根路由：返回 JSON 格式的 Hello World
 	r.GET("/", func(c *gin.Context) {

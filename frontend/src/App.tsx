@@ -5,7 +5,7 @@ import CreateQuote from '@/pages/create-quote'
 import Filing from '@/pages/filing'
 import MyApplications from '@/pages/my-applications'
 import MyApprovals from '@/pages/my-approvals'
-import TestPage from '@/pages/test-page'
+import ProductManage from '@/pages/product-manage'
 import { AuthProvider, useAuth } from '@/AuthContext'
 import { Spin } from 'antd'
 import { ROLE_FUNCTIONS_MAP } from '@/roleMenuConfig'
@@ -31,7 +31,7 @@ function AppRoutes() {
       <Route path="/filing" element={<Filing />} />
       <Route path="/my-applications" element={<MyApplications />} />
       <Route path="/my-approvals" element={<MyApprovals />} />
-      <Route path="/test-page" element={<TestPage />} />
+      <Route path="/product-manage" element={<ProductManage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

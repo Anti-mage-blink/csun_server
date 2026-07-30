@@ -1,0 +1,45 @@
+/* NativeDataTable 样式定义 */
+.native-data-table-wrapper {
+  background-color: #ffffff;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.native-data-table-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.native-data-table-search-input {
+  width: 260px;
+}
+
+.native-data-table-action-link {
+  color: #1677ff;
+  cursor: pointer;
+  user-select: none;
+}
+
+.native-data-table-action-link:hover {
+  color: #4096ff;
+  text-decoration: underline;
+}
+
+.native-data-table-action-delete {
+  color: #ff4d4f;
+  cursor: pointer;
+  user-select: none;
+}
+
+.native-data-table-action-delete:hover {
+  color: #ff7875;
+  text-decoration: underline;
+}
+
+/* 单元格单行显示不折行，超出时出现横向滑动条 */
+.native-data-table-wrapper .ant-table-cell {
+  white-space: nowrap;
+}
+
