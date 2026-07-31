@@ -3,6 +3,9 @@
   background: #f0f2f5;
   min-height: calc(100vh - 110px);
   box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden; /* 防止组件产生整个页面的水平滚动条 */
 }
 
 .loading-container {
@@ -37,11 +40,18 @@
 .table-card {
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  max-width: 100%;
+  overflow: hidden;
 }
 
-/* 表格单元格单行显示不折行，超出时出现横向滑动条 */
+/* 表格单元格单行显示不折行，超出时仅在表格卡片内部出现横向滑动条 */
 .approve-container .ant-table-cell {
   white-space: nowrap;
+}
+
+.approve-container .ant-table-wrapper,
+.approve-container .ant-card-body {
+  max-width: 100%;
 }
 
 .highlight-code {
@@ -51,6 +61,11 @@
 }
 
 /* 详情页样式 */
+.approve-details-view {
+  width: 100%;
+  max-width: 100%;
+}
+
 .back-bar {
   display: flex;
   align-items: center;
@@ -68,24 +83,31 @@
   display: flex;
   gap: 20px;
   align-items: stretch;
+  width: 100%;
+  max-width: 100%;
 }
 
 .detail-left {
-  flex: 7;
+  flex: 7.5;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .detail-right-steps {
-  flex: 3;
+  flex: 2.5;
   min-width: 280px;
+  max-width: 100%;
 }
 
 .card-shadow {
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   background: #fff;
+  max-width: 100%;
+  overflow: hidden; /* 确保卡片自身不溢出，横向滚动条保留在表格内部 */
 }
 
 .full-height-card {

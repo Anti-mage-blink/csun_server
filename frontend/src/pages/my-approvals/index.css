@@ -3,6 +3,9 @@
   background: #f0f2f5;
   min-height: calc(100vh - 110px);
   box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .loading-container {
@@ -37,6 +40,8 @@
 .table-card {
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .highlight-code {
@@ -63,24 +68,31 @@
   display: flex;
   gap: 20px;
   align-items: stretch;
+  width: 100%;
+  max-width: 100%;
 }
 
 .detail-left {
-  flex: 7;
+  flex: 7.5;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .detail-right-steps {
-  flex: 3;
+  flex: 2.5;
   min-width: 280px;
+  max-width: 100%;
 }
 
 .card-shadow {
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   background: #fff;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .full-height-card {
