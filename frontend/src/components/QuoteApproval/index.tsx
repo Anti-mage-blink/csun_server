@@ -250,7 +250,7 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
   // 页面一：渲染审批页面（列表总览）
   // --------------------------------------------------------
   const renderListView = () => {
-    const listDataSource = filteredProcesses.map(process => {
+    const mapProcessToRow = (process: QuoteProcess) => {
       const quote = getProcessQuote(process)
       const currentNode = getProcessCurrentNode(process)
       const rawQuoteDate = quote?.quote_date || '';
@@ -274,7 +274,7 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
         currentNodeStatus: currentNode?.status || '已结束',
         created_at: displayTime
       }
-    })
+    }
 
     const columns: any[] = [
       {
@@ -358,6 +358,58 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
       mode === 'my-submit' ? '我发起的审批' : '备案查看'
     )
 
+    if (mode === 'approve') {
+      const pendingProcesses = filteredProcesses.filter(p => (p.present_status || '待审批') === '待审批')
+      const approvedProcesses = filteredProcesses.filter(p => (p.present_status || '待审批') !== '待审批')
+
+      const pendingDataSource = pendingProcesses.map(mapProcessToRow)
+      const approvedDataSource = approvedProcesses.map(mapProcessToRow)
+
+      return (
+        <div className="need-approve-view">
+          <div className="header-bar">
+            <Title level={4}>
+              <FileTextOutlined className="icon-margin" /> {displayTitle}
+              <span className="total-badge">{filteredProcesses.length}</span>
+            </Title>
+            {onRefresh && (
+              <Button type="default" onClick={onRefresh} loading={loading}>
+                刷新
+              </Button>
+            )}
+          </div>
+
+          <Card title="待审批" className="table-card mb-16">
+            <Table 
+              dataSource={pendingDataSource} 
+              columns={columns} 
+              loading={loading}
+              scroll={{ x: 'max-content' }}
+              locale={{ 
+                emptyText: <Empty description="当前没有待审批的报价单" /> 
+              }}
+              pagination={{ pageSize: 10 }}
+            />
+          </Card>
+
+          <Card title="已审批" className="table-card">
+            <Table 
+              dataSource={approvedDataSource} 
+              columns={columns} 
+              loading={loading}
+              scroll={{ x: 'max-content' }}
+              locale={{ 
+                emptyText: <Empty description="当前没有已审批的记录" /> 
+              }}
+              pagination={{ pageSize: 10 }}
+            />
+          </Card>
+        </div>
+      )
+    }
+
+    const listDataSource = filteredProcesses.map(mapProcessToRow)
+
     return (
       <div className="need-approve-view">
         <div className="header-bar">
@@ -379,7 +431,7 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
             loading={loading}
             scroll={{ x: 'max-content' }}
             locale={{ 
-              emptyText: <Empty description={`当前没有相关的报价审批单数据`} /> 
+              emptyText: <Empty description="当前没有相关的报价审批单数据" /> 
             }}
             pagination={{ pageSize: 10 }}
           />

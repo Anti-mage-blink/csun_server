@@ -248,7 +248,7 @@ const CreateQuote: React.FC = () => {
     });
   };
 
-  // 5. 报价明细行数据修改（双向状态修改与联动逻辑）
+  // 5. 报价明细行数据修改（双向状态修改 与 联动逻辑）
   const updateRow = (key: string, updatedFields: Partial<FormQuoteItem>) => {
     setQuoteItems((prev) =>
       prev.map((item) => {
@@ -256,26 +256,36 @@ const CreateQuote: React.FC = () => {
 
         const newItem = { ...item, ...updatedFields };
 
-        // 联动计算：根据批量档位，自动带出目录基准价
+        // 联动计算：根据批量档位，自动带出目录基准价并更新报价单价
         if (updatedFields.order_batch_tier !== undefined) {
           const tier = newItem.order_batch_tier;
+          let base = 0;
           if (tier === '大批量') {
-            newItem.catalog_base_price = newItem.big_batch_price || 0;
+            base = newItem.big_batch_price || 0;
           } else if (tier === '中小批量') {
-            newItem.catalog_base_price = newItem.middle_small_batch_price || 0;
+            base = newItem.middle_small_batch_price || 0;
           } else if (tier === '样品/小单') {
-            newItem.catalog_base_price = newItem.sample_small_order_price || 0;
+            base = newItem.sample_small_order_price || 0;
+          }
+          newItem.catalog_base_price = base;
+          // 每次选择批量档位时，自动将该档位的目录基准价填入报价单价
+          if (updatedFields.quote_unit_price === undefined) {
+            newItem.quote_unit_price = base;
           }
         }
 
-        // 联动计算：报价单价 = 目录基准价 * (1 + 报价浮动比例 / 100)
+        // 联动计算：自动计算报价浮动比例 = ((报价单价 - 目录基准价) / 目录基准价) * 100
         const basePrice = newItem.catalog_base_price || 0;
-        const floatRate = newItem.quote_float_rate || 0;
-        newItem.quote_unit_price = Math.round(basePrice * (1 + floatRate / 100) * 100) / 100;
+        const unitPrice = newItem.quote_unit_price || 0;
+        if (basePrice > 0 && unitPrice > 0) {
+          newItem.quote_float_rate = Math.round(((unitPrice - basePrice) / basePrice) * 10000) / 100;
+        } else {
+          newItem.quote_float_rate = 0;
+        }
 
         // 联动计算：合计数额 = 报价单价 * 数量
         const qty = newItem.quantity || 0;
-        newItem.total_amount = Math.round(newItem.quote_unit_price * qty * 100) / 100;
+        newItem.total_amount = Math.round(unitPrice * qty * 100) / 100;
 
         // 校验逻辑：数量范围合法性检查
         if (newItem.order_batch_tier && newItem.product_spec_id) {
@@ -368,8 +378,8 @@ const CreateQuote: React.FC = () => {
         Feedback.error(`明细第 ${lineNo} 行：未选择批量档位`);
         return;
       }
-      if (item.quote_float_rate === null || item.quote_float_rate === undefined) {
-        Feedback.error(`明细第 ${lineNo} 行：请输入报价浮动比例`);
+      if (item.quote_unit_price === null || item.quote_unit_price === undefined || item.quote_unit_price <= 0) {
+        Feedback.error(`明细第 ${lineNo} 行：请输入正确的报价单价`);
         return;
       }
       if (item.quantity === null || item.quantity <= 0) {
@@ -504,6 +514,7 @@ const CreateQuote: React.FC = () => {
                   sample_small_order_price: specRec.sample_small_order_price || 0,
                   order_batch_tier: '',
                   catalog_base_price: 0,
+                  quote_unit_price: 0,
                 });
               }
             }}
@@ -577,26 +588,33 @@ const CreateQuote: React.FC = () => {
       render: (text: number) => <span>￥{text.toFixed(2)}</span>,
     },
     {
-      title: '报价浮动比例 *',
+      title: '报价浮动比例',
       dataIndex: 'quote_float_rate',
       key: 'quote_float_rate',
       width: 120,
+      render: (text: number) => {
+        const val = text || 0;
+        const formatted = val > 0 ? `+${val}%` : `${val}%`;
+        const color = val < 0 ? '#cf1322' : val > 0 ? '#3f8600' : 'inherit';
+        return <span style={{ color, fontWeight: 500 }}>{formatted}</span>;
+      },
+    },
+    {
+      title: '报价单价 *',
+      dataIndex: 'quote_unit_price',
+      key: 'quote_unit_price',
+      width: 130,
       render: (text: number, record: FormQuoteItem) => (
         <InputNumber
           style={{ width: '100%' }}
-          formatter={(val) => `${val}%`}
-          parser={(val) => (val ? val.replace('%', '') : '') as any}
-          value={text}
-          onChange={(val) => updateRow(record.key, { quote_float_rate: val || 0 })}
+          min={0}
+          precision={2}
+          prefix="￥"
+          value={text || undefined}
+          placeholder="填单价"
+          onChange={(val) => updateRow(record.key, { quote_unit_price: val ?? 0 })}
         />
       ),
-    },
-    {
-      title: '报价单价',
-      dataIndex: 'quote_unit_price',
-      key: 'quote_unit_price',
-      width: 110,
-      render: (text: number) => <span>￥{text.toFixed(2)}</span>,
     },
     {
       title: '数量 *',

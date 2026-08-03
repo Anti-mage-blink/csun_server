@@ -12,16 +12,18 @@ const TableNameQuote = "quote_manage.quote"
 
 // Quote mapped from table <quote_manage.quote>
 type Quote struct {
-	ID           int32      `gorm:"column:id;type:int unsigned;primaryKey;autoIncrement:true" json:"id"`
-	QuoteCode    *string    `gorm:"column:quote_code;type:varchar(255)" json:"quote_code"`
-	CustomerID   *int32     `gorm:"column:customer_id;type:int unsigned" json:"customer_id"`
-	CustomerName *string    `gorm:"column:customer_name;type:varchar(255)" json:"customer_name"`
-	ContactName  *string    `gorm:"column:contact_name;type:varchar(255)" json:"contact_name"`
-	ContactTitle *string    `gorm:"column:contact_title;type:varchar(255)" json:"contact_title"`
-	ValidDays    *string    `gorm:"column:valid_days;type:varchar(255)" json:"valid_days"`
-	CreatorID    *int32     `gorm:"column:creator_id;type:int unsigned" json:"creator_id"`
-	CreatorName  *string    `gorm:"column:creator_name;type:varchar(255)" json:"creator_name"`
-	QuoteDate    *time.Time `gorm:"column:quote_date;type:date" json:"quote_date"`
+	ID             int32      `gorm:"column:id;type:int unsigned;primaryKey;autoIncrement:true" json:"id"`
+	QuoteCode      *string    `gorm:"column:quote_code;type:varchar(255)" json:"quote_code"`
+	CustomerID     *int32     `gorm:"column:customer_id;type:int unsigned" json:"customer_id"`
+	CustomerName   *string    `gorm:"column:customer_name;type:varchar(255)" json:"customer_name"`
+	ContactName    *string    `gorm:"column:contact_name;type:varchar(255)" json:"contact_name"`
+	ContactTitle   *string    `gorm:"column:contact_title;type:varchar(255)" json:"contact_title"`
+	ValidDays      *string    `gorm:"column:valid_days;type:varchar(255)" json:"valid_days"`
+	CreatorID      *int32     `gorm:"column:creator_id;type:int unsigned" json:"creator_id"`
+	CreatorName    *string    `gorm:"column:creator_name;type:varchar(255)" json:"creator_name"`
+	QuoteDate      *time.Time `gorm:"column:quote_date;type:date" json:"quote_date"`
+	Remarks        *string    `gorm:"column:remarks;type:varchar(255)" json:"remarks"`
+	AttachmentPath *string    `gorm:"column:attachment_path;type:varchar(255)" json:"attachment_path"`
 }
 
 // TableName Quote's table name
