@@ -36,6 +36,7 @@ func (r *defaultMyApproveQueryRepository) GetProcessesByApproverID(ctx context.C
 	q := quote_query.Use(r.db.QuoteManage)
 	return q.QuoteProcess.WithContext(ctx).Where(
 		q.QuoteProcess.ApproverID.Eq(approverID),
+		q.QuoteProcess.PresentStatus.Neq("已撤回"),
 	).Order(q.QuoteProcess.ID.Desc()).Find()
 }
 

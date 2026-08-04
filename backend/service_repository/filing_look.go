@@ -21,34 +21,51 @@ type FilingLookService interface {
 }
 
 type filingLookRepository interface {
-	GetAllProcesses(ctx context.Context) ([]*quote_manage.QuoteProcess, error)
-	GetAllNodes(ctx context.Context) ([]*quote_manage.QuoteProcessNode, error)
-	GetAllQuotes(ctx context.Context) ([]*quote_manage.Quote, error)
-	GetAllQuoteItems(ctx context.Context) ([]*quote_manage.AQuoteItem, error)
+	GetValidProcesses(ctx context.Context) ([]*quote_manage.QuoteProcess, error)
+	GetNodesByProcessIDs(ctx context.Context, processIDs []int32) ([]*quote_manage.QuoteProcessNode, error)
+	GetQuotesByQuoteIDs(ctx context.Context, quoteIDs []int32) ([]*quote_manage.Quote, error)
+	GetQuoteItemsByQuoteIDs(ctx context.Context, quoteIDs []int32) ([]*quote_manage.AQuoteItem, error)
 }
 
 type defaultFilingLookRepository struct {
 	db *DBEngine
 }
 
-func (r *defaultFilingLookRepository) GetAllProcesses(ctx context.Context) ([]*quote_manage.QuoteProcess, error) {
+func (r *defaultFilingLookRepository) GetValidProcesses(ctx context.Context) ([]*quote_manage.QuoteProcess, error) {
 	q := quote_query.Use(r.db.QuoteManage)
-	return q.QuoteProcess.WithContext(ctx).Order(q.QuoteProcess.ID.Desc()).Find()
+	return q.QuoteProcess.WithContext(ctx).Where(
+		q.QuoteProcess.PresentStatus.Neq("已撤回"),
+	).Order(q.QuoteProcess.ID.Desc()).Find()
 }
 
-func (r *defaultFilingLookRepository) GetAllNodes(ctx context.Context) ([]*quote_manage.QuoteProcessNode, error) {
+func (r *defaultFilingLookRepository) GetNodesByProcessIDs(ctx context.Context, processIDs []int32) ([]*quote_manage.QuoteProcessNode, error) {
+	if len(processIDs) == 0 {
+		return []*quote_manage.QuoteProcessNode{}, nil
+	}
 	q := quote_query.Use(r.db.QuoteManage)
-	return q.QuoteProcessNode.WithContext(ctx).Order(q.QuoteProcessNode.ID.Desc()).Find()
+	return q.QuoteProcessNode.WithContext(ctx).Where(
+		q.QuoteProcessNode.ProcessID.In(processIDs...),
+	).Order(q.QuoteProcessNode.ID.Desc()).Find()
 }
 
-func (r *defaultFilingLookRepository) GetAllQuotes(ctx context.Context) ([]*quote_manage.Quote, error) {
+func (r *defaultFilingLookRepository) GetQuotesByQuoteIDs(ctx context.Context, quoteIDs []int32) ([]*quote_manage.Quote, error) {
+	if len(quoteIDs) == 0 {
+		return []*quote_manage.Quote{}, nil
+	}
 	q := quote_query.Use(r.db.QuoteManage)
-	return q.Quote.WithContext(ctx).Order(q.Quote.ID.Desc()).Find()
+	return q.Quote.WithContext(ctx).Where(
+		q.Quote.ID.In(quoteIDs...),
+	).Order(q.Quote.ID.Desc()).Find()
 }
 
-func (r *defaultFilingLookRepository) GetAllQuoteItems(ctx context.Context) ([]*quote_manage.AQuoteItem, error) {
+func (r *defaultFilingLookRepository) GetQuoteItemsByQuoteIDs(ctx context.Context, quoteIDs []int32) ([]*quote_manage.AQuoteItem, error) {
+	if len(quoteIDs) == 0 {
+		return []*quote_manage.AQuoteItem{}, nil
+	}
 	q := quote_query.Use(r.db.QuoteManage)
-	return q.AQuoteItem.WithContext(ctx).Order(q.AQuoteItem.ID.Desc()).Find()
+	return q.AQuoteItem.WithContext(ctx).Where(
+		q.AQuoteItem.QuoteID.In(quoteIDs...),
+	).Order(q.AQuoteItem.ID.Desc()).Find()
 }
 
 type filingLookService struct {
@@ -75,36 +92,62 @@ func (s *filingLookService) FilingLook(ctx context.Context) (*FilingLookResult, 
 		QuoteItems:        make([]*quote_manage.AQuoteItem, 0),
 	}
 
-	processes, err := s.repo.GetAllProcesses(ctx)
+	// 1. 查未撤回的quote_process
+	processes, err := s.repo.GetValidProcesses(ctx)
 	if err != nil {
 		return nil, err
-	}
-	if len(processes) > 0 {
-		result.QuoteProcesses = processes
 	}
 
-	nodes, err := s.repo.GetAllNodes(ctx)
-	if err != nil {
-		return nil, err
-	}
-	if len(nodes) > 0 {
-		result.QuoteProcessNodes = nodes
+	if len(processes) == 0 {
+		return result, nil
 	}
 
-	quotes, err := s.repo.GetAllQuotes(ctx)
-	if err != nil {
-		return nil, err
-	}
-	if len(quotes) > 0 {
-		result.Quotes = quotes
+	result.QuoteProcesses = processes
+
+	// 拿到这些quote_process记录的“quote_process.id列表”和“quote_id列表”
+	processIDs := make([]int32, 0, len(processes))
+	quoteIDMap := make(map[int32]bool)
+	quoteIDs := make([]int32, 0, len(processes))
+
+	for _, p := range processes {
+		if p == nil {
+			continue
+		}
+		processIDs = append(processIDs, p.ID)
+		if p.QuoteID != nil && !quoteIDMap[*p.QuoteID] {
+			quoteIDMap[*p.QuoteID] = true
+			quoteIDs = append(quoteIDs, *p.QuoteID)
+		}
 	}
 
-	items, err := s.repo.GetAllQuoteItems(ctx)
-	if err != nil {
-		return nil, err
+	// 2. 查quote_process_node：quote_process_node.process_id in processIDs
+	if len(processIDs) > 0 {
+		nodes, err := s.repo.GetNodesByProcessIDs(ctx, processIDs)
+		if err != nil {
+			return nil, err
+		}
+		if len(nodes) > 0 {
+			result.QuoteProcessNodes = nodes
+		}
 	}
-	if len(items) > 0 {
-		result.QuoteItems = items
+
+	// 3. 查quote与quote_item：quote.id in quoteIDs
+	if len(quoteIDs) > 0 {
+		quotes, err := s.repo.GetQuotesByQuoteIDs(ctx, quoteIDs)
+		if err != nil {
+			return nil, err
+		}
+		if len(quotes) > 0 {
+			result.Quotes = quotes
+		}
+
+		items, err := s.repo.GetQuoteItemsByQuoteIDs(ctx, quoteIDs)
+		if err != nil {
+			return nil, err
+		}
+		if len(items) > 0 {
+			result.QuoteItems = items
+		}
 	}
 
 	return result, nil

@@ -10,46 +10,48 @@ import (
 
 // MockFilingLookRepository 备案查看仓储的 Mock 实现
 type MockFilingLookRepository struct {
-	GetAllProcessesFn  func(ctx context.Context) ([]*quote_manage.QuoteProcess, error)
-	GetAllNodesFn      func(ctx context.Context) ([]*quote_manage.QuoteProcessNode, error)
-	GetAllQuotesFn     func(ctx context.Context) ([]*quote_manage.Quote, error)
-	GetAllQuoteItemsFn func(ctx context.Context) ([]*quote_manage.AQuoteItem, error)
+	GetValidProcessesFn       func(ctx context.Context) ([]*quote_manage.QuoteProcess, error)
+	GetNodesByProcessIDsFn    func(ctx context.Context, processIDs []int32) ([]*quote_manage.QuoteProcessNode, error)
+	GetQuotesByQuoteIDsFn     func(ctx context.Context, quoteIDs []int32) ([]*quote_manage.Quote, error)
+	GetQuoteItemsByQuoteIDsFn func(ctx context.Context, quoteIDs []int32) ([]*quote_manage.AQuoteItem, error)
 }
 
-func (m *MockFilingLookRepository) GetAllProcesses(ctx context.Context) ([]*quote_manage.QuoteProcess, error) {
-	return m.GetAllProcessesFn(ctx)
+func (m *MockFilingLookRepository) GetValidProcesses(ctx context.Context) ([]*quote_manage.QuoteProcess, error) {
+	return m.GetValidProcessesFn(ctx)
 }
 
-func (m *MockFilingLookRepository) GetAllNodes(ctx context.Context) ([]*quote_manage.QuoteProcessNode, error) {
-	return m.GetAllNodesFn(ctx)
+func (m *MockFilingLookRepository) GetNodesByProcessIDs(ctx context.Context, processIDs []int32) ([]*quote_manage.QuoteProcessNode, error) {
+	return m.GetNodesByProcessIDsFn(ctx, processIDs)
 }
 
-func (m *MockFilingLookRepository) GetAllQuotes(ctx context.Context) ([]*quote_manage.Quote, error) {
-	return m.GetAllQuotesFn(ctx)
+func (m *MockFilingLookRepository) GetQuotesByQuoteIDs(ctx context.Context, quoteIDs []int32) ([]*quote_manage.Quote, error) {
+	return m.GetQuotesByQuoteIDsFn(ctx, quoteIDs)
 }
 
-func (m *MockFilingLookRepository) GetAllQuoteItems(ctx context.Context) ([]*quote_manage.AQuoteItem, error) {
-	return m.GetAllQuoteItemsFn(ctx)
+func (m *MockFilingLookRepository) GetQuoteItemsByQuoteIDs(ctx context.Context, quoteIDs []int32) ([]*quote_manage.AQuoteItem, error) {
+	return m.GetQuoteItemsByQuoteIDsFn(ctx, quoteIDs)
 }
 
-// TestFilingLook_Success 测试成功获取全量备案数据的情况
+// TestFilingLook_Success 测试成功获取备案数据的情况
 func TestFilingLook_Success(t *testing.T) {
-	mockProcesses := []*quote_manage.QuoteProcess{{ID: 1}}
-	mockNodes := []*quote_manage.QuoteProcessNode{{ID: 1}}
-	mockQuotes := []*quote_manage.Quote{{ID: 1}}
-	mockItems := []*quote_manage.AQuoteItem{{ID: 1}}
+	qid := int32(10)
+	pid := int32(1)
+	mockProcesses := []*quote_manage.QuoteProcess{{ID: 1, QuoteID: &qid}}
+	mockNodes := []*quote_manage.QuoteProcessNode{{ID: 1, ProcessID: &pid}}
+	mockQuotes := []*quote_manage.Quote{{ID: 10}}
+	mockItems := []*quote_manage.AQuoteItem{{ID: 100, QuoteID: &qid}}
 
 	mock := &MockFilingLookRepository{
-		GetAllProcessesFn: func(ctx context.Context) ([]*quote_manage.QuoteProcess, error) {
+		GetValidProcessesFn: func(ctx context.Context) ([]*quote_manage.QuoteProcess, error) {
 			return mockProcesses, nil
 		},
-		GetAllNodesFn: func(ctx context.Context) ([]*quote_manage.QuoteProcessNode, error) {
+		GetNodesByProcessIDsFn: func(ctx context.Context, processIDs []int32) ([]*quote_manage.QuoteProcessNode, error) {
 			return mockNodes, nil
 		},
-		GetAllQuotesFn: func(ctx context.Context) ([]*quote_manage.Quote, error) {
+		GetQuotesByQuoteIDsFn: func(ctx context.Context, quoteIDs []int32) ([]*quote_manage.Quote, error) {
 			return mockQuotes, nil
 		},
-		GetAllQuoteItemsFn: func(ctx context.Context) ([]*quote_manage.AQuoteItem, error) {
+		GetQuoteItemsByQuoteIDsFn: func(ctx context.Context, quoteIDs []int32) ([]*quote_manage.AQuoteItem, error) {
 			return mockItems, nil
 		},
 	}
@@ -66,10 +68,10 @@ func TestFilingLook_Success(t *testing.T) {
 	if len(res.QuoteProcessNodes) != 1 || res.QuoteProcessNodes[0].ID != 1 {
 		t.Errorf("nodes slice unexpected")
 	}
-	if len(res.Quotes) != 1 || res.Quotes[0].ID != 1 {
+	if len(res.Quotes) != 1 || res.Quotes[0].ID != 10 {
 		t.Errorf("quotes slice unexpected")
 	}
-	if len(res.QuoteItems) != 1 || res.QuoteItems[0].ID != 1 {
+	if len(res.QuoteItems) != 1 || res.QuoteItems[0].ID != 100 {
 		t.Errorf("quote items slice unexpected")
 	}
 }
@@ -77,7 +79,7 @@ func TestFilingLook_Success(t *testing.T) {
 // TestFilingLook_DBError 测试其中一个查询数据库出错的情况
 func TestFilingLook_DBError(t *testing.T) {
 	mock := &MockFilingLookRepository{
-		GetAllProcessesFn: func(ctx context.Context) ([]*quote_manage.QuoteProcess, error) {
+		GetValidProcessesFn: func(ctx context.Context) ([]*quote_manage.QuoteProcess, error) {
 			return nil, errors.New("db connection failure")
 		},
 	}
