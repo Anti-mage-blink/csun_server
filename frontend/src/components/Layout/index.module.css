@@ -3,6 +3,29 @@
   position: relative;
 }
 
+.sider {
+  background: #2e5b88 !important;
+}
+
+.sider :global(.ant-layout-sider-children) {
+  background: #2e5b88;
+}
+
+.sider :global(.ant-menu-dark) {
+  background: transparent !important;
+}
+
+/* 选中项背景：加深同色系天空蓝，避免亮蓝夺目 */
+.sider :global(.ant-menu-dark .ant-menu-item-selected) {
+  background-color: #1b3d63 !important;
+  color: #ffffff !important;
+}
+
+/* 悬浮项背景 */
+.sider :global(.ant-menu-dark .ant-menu-item:hover:not(.ant-menu-item-selected)) {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
 .trigger {
   position: fixed;
   top: 50%;
@@ -38,6 +61,7 @@
   font-weight: 600;
   overflow: hidden;
   white-space: nowrap;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .header {

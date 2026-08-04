@@ -73,6 +73,10 @@
   margin-bottom: 20px;
 }
 
+.back-bar-actions {
+  margin-left: auto;
+}
+
 .detail-title-code {
   font-size: 16px;
   font-weight: bold;
@@ -158,15 +162,18 @@
 }
 
 .btn-withdraw {
-  background-color: #f5f5f5 !important;
-  border-color: #d9d9d9 !important;
-  color: #595959 !important;
+  background-color: #8c939d !important;
+  border-color: #8c939d !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 6px rgba(140, 147, 157, 0.3) !important;
+  transition: all 0.2s cubic-bezier(0.645, 0.045, 0.355, 1) !important;
 }
 
 .btn-withdraw:hover {
-  background-color: #e8e8e8 !important;
-  border-color: #d9d9d9 !important;
-  color: #262626 !important;
+  background-color: #78808a !important;
+  border-color: #78808a !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 10px rgba(120, 128, 138, 0.35) !important;
 }
 
 /* 已撤回状态 Tag 专属灰色背景样式 */

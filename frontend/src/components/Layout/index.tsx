@@ -38,9 +38,9 @@ const AppLayout = ({ children }: AppLayoutProps) => {
         trigger={null}
         collapsedWidth={0}
         width={200}
-        className="no-print"
+        className={`no-print ${styles.sider}`}
       >
-        <div className={styles.logo}>报价管理系统 v2</div>
+        <div className={styles.logo}>报价管理系统</div>
         <Menu
           theme="dark"
           mode="inline"

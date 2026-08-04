@@ -577,35 +577,33 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
             返回列表
           </Button>
           <span className="detail-title-code">审批详情 - {quote?.quote_code || '未知编号'}</span>
-          {mode === 'filing' && (
+          <Space className="back-bar-actions" style={{ marginLeft: 'auto' }}>
+            {mode === 'my-submit' && onWithdraw && (!currentProcess.present_status || currentProcess.present_status === '待审批') && (
+              <Popconfirm
+                title="确定撤回该报价单吗？"
+                description="撤回后当前审批流将被终止"
+                onConfirm={() => handleWithdrawAction(currentProcess)}
+                okText="确定"
+                cancelText="取消"
+              >
+                <Button 
+                  type="default"
+                  className="btn-withdraw"
+                  icon={<RollbackOutlined />} 
+                  loading={withdrawing}
+                >
+                  撤回
+                </Button>
+              </Popconfirm>
+            )}
             <Button 
               type="primary" 
               icon={<PrinterOutlined />} 
               onClick={() => window.print()}
-              style={{ marginLeft: 'auto' }}
             >
               打印
             </Button>
-          )}
-          {mode === 'my-submit' && onWithdraw && (!currentProcess.present_status || currentProcess.present_status === '待审批') && (
-            <Popconfirm
-              title="确定撤回该报价单吗？"
-              description="撤回后当前审批流将被终止"
-              onConfirm={() => handleWithdrawAction(currentProcess)}
-              okText="确定"
-              cancelText="取消"
-            >
-              <Button 
-                type="default"
-                className="btn-withdraw"
-                icon={<RollbackOutlined />} 
-                loading={withdrawing}
-                style={{ marginLeft: 'auto' }}
-              >
-                撤回
-              </Button>
-            </Popconfirm>
-          )}
+          </Space>
         </div>
 
         <div className="detail-layout">
