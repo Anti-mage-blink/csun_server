@@ -4,20 +4,26 @@
 
 package quote_manage
 
+import (
+	"time"
+)
+
 const TableNameQuoteProcessNode = "quote_manage.quote_process_node"
 
 // QuoteProcessNode mapped from table <quote_manage.quote_process_node>
 type QuoteProcessNode struct {
-	ID                  int32   `gorm:"column:id;type:int unsigned;primaryKey;autoIncrement:true" json:"id"`
-	ProcessID           *int32  `gorm:"column:process_id;type:int unsigned" json:"process_id"`
-	SeqNum              *int32  `gorm:"column:seq_num;type:int" json:"seq_num"`
-	Name                *string `gorm:"column:name;type:varchar(255)" json:"name"`
-	ApproveEmployeeID   *int32  `gorm:"column:approve_employee_id;type:int unsigned" json:"approve_employee_id"`
-	ApproveEmployeeName *string `gorm:"column:approve_employee_name;type:varchar(255)" json:"approve_employee_name"`
-	Status              *string `gorm:"column:status;type:varchar(255)" json:"status"`
-	ApproveComment      *string `gorm:"column:approve_comment;type:varchar(255)" json:"approve_comment"`
-	CreatedAt           *string `gorm:"column:created_at;type:varchar(255)" json:"created_at"`
-	ApproveAt           *string `gorm:"column:approve_at;type:varchar(255)" json:"approve_at"`
+	ID             int32      `gorm:"column:id;type:int unsigned;primaryKey;autoIncrement:true" json:"id"`
+	ProcessID      *int32     `gorm:"column:process_id;type:int unsigned" json:"process_id"`
+	SeqNum         *int32     `gorm:"column:seq_num;type:int" json:"seq_num"`
+	NodeNum        *int32     `gorm:"column:node_num;type:int" json:"node_num"`
+	Name           *string    `gorm:"column:name;type:varchar(255)" json:"name"`
+	Role           *string    `gorm:"column:role;type:varchar(255)" json:"role"`
+	Status         *string    `gorm:"column:status;type:varchar(255)" json:"status"`
+	ApproverID     *int32     `gorm:"column:approver_id;type:int unsigned" json:"approver_id"`
+	ApproverName   *string    `gorm:"column:approver_name;type:varchar(255)" json:"approver_name"`
+	ApproveComment *string    `gorm:"column:approve_comment;type:varchar(255)" json:"approve_comment"`
+	CreatedAt      *time.Time `gorm:"column:created_at;type:datetime" json:"created_at"`
+	ApproveAt      *time.Time `gorm:"column:approve_at;type:datetime" json:"approve_at"`
 }
 
 // TableName QuoteProcessNode's table name

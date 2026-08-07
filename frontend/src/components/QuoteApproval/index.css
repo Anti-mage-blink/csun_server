@@ -49,6 +49,12 @@
   white-space: nowrap;
 }
 
+/* 详情页中的报价明细表格：去掉强制不折行，允许宽度不够时换行显示 */
+.approve-container .detail-quote-items-card .ant-table-cell {
+  white-space: normal;
+  word-break: break-word;
+}
+
 .approve-container .ant-table-wrapper,
 .approve-container .ant-card-body {
   max-width: 100%;
@@ -104,6 +110,13 @@
   flex: 2.5;
   min-width: 280px;
   max-width: 100%;
+}
+
+/* 确保 finish 节点（已通过/已同意）和下一个节点之间的连线为蓝色 */
+.detail-right-steps .ant-steps-item-finish > .ant-steps-item-container > .ant-steps-item-tail::after,
+.detail-right-steps .ant-steps-item-finish .ant-steps-item-tail::after,
+.detail-right-steps .ant-steps-item-finish::after {
+  background-color: #1890ff !important;
 }
 
 .card-shadow {
@@ -232,40 +245,43 @@
     overflow: visible !important;
   }
 
-  /* 3. 重置审批详情页容器 */
+  /* 3. 重置审批详情页容器与放大倍率，避免过高挤压第一页空间 */
   .approve-container {
     padding: 0 !important;
     margin: 0 !important;
     min-height: auto !important;
     background: transparent !important;
+    width: 100% !important;
   }
 
   .approve-details-view {
     padding: 0 !important;
     margin: 0 !important;
     background: transparent !important;
-    /* 核心优化：等比例放大整体排版（1.15 倍），让打印/保存的 PDF 更加充实饱满 */
-    zoom: 1.15 !important;
+    width: 100% !important;
+    zoom: 1 !important; /* 维持 100% 标准渲染，避免过大放大导致第一页严重挤压断页 */
   }
 
-  /* 4. 保持原页面双栏排版：左侧占 7 份，右侧占 3 份 */
+  /* 4. 维持原页面自然双栏排版：左侧占 7.5 份，右侧占 2.5 份 */
   .detail-layout {
     display: flex !important;
     flex-direction: row !important;
     gap: 16px !important;
     width: 100% !important;
+    align-items: flex-start !important;
   }
 
   .detail-left {
-    flex: 7 !important;
+    flex: 7.5 !important;
     display: flex !important;
     flex-direction: column !important;
     gap: 12px !important;
+    min-width: 0 !important;
   }
 
   .detail-right-steps {
-    flex: 3 !important;
-    min-width: 240px !important;
+    flex: 2.5 !important;
+    min-width: 220px !important;
   }
 
   /* 5. 确保浏览器在打印时也会渲染背景颜色（如 Tag 标签、表头等） */
@@ -274,35 +290,62 @@
     print-color-adjust: exact !important;
   }
 
-  /* 6. 将卡片阴影重置为简洁细腻的打印边框 */
-  .ant-card {
+  /* 6. 重置卡片与表格高宽溢出，允许内容平滑跨页展开而不截断 */
+  .ant-card,
+  .card-shadow,
+  .ant-card-body,
+  .ant-table-wrapper,
+  .ant-table-container,
+  .ant-table {
     box-shadow: none !important;
-    border: 1px solid #d9d9d9 !important;
     border-radius: 4px !important;
     background: #fff !important;
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
   }
 
+  .ant-card {
+    border: 1px solid #d9d9d9 !important;
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+  }
+
+  /* 7. 绑定卡片标题，绝不在卡片标题后孤立断页 */
   .ant-card-head {
     border-bottom: 1px solid #d9d9d9 !important;
     background-color: #fafafa !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
   }
 
-  /* 7. 表格与描述列表在打印时的细腻化适配 */
+  /* 8. 表格与单元格自适应换行，防止宽度不够或右侧截断 */
   .ant-table {
     background: #fff !important;
+    width: 100% !important;
+  }
+
+  .ant-table-thead {
+    display: table-header-group !important;
   }
 
   .ant-table-thead > tr > th {
     background: #fafafa !important;
     border-bottom: 1px solid #d9d9d9 !important;
     color: #000 !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    padding: 6px 8px !important;
   }
 
   .ant-table-tbody > tr > td {
     border-bottom: 1px solid #f0f0f0 !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    padding: 6px 8px !important;
   }
 
-  /* 8. 控制分页，防止单行表格或步骤描述在跨页时被中途切断 */
+  /* 9. 防断裂规则控制：确保单行表格行和步骤项不被半截切断 */
   .ant-table-row,
   .ant-descriptions-row,
   .ant-steps-item,
@@ -311,10 +354,10 @@
     break-inside: avoid !important;
   }
 
-  /* 9. A4 纸张页面属性配置：提供适度的外边距 */
+  /* 10. A4 纸张页面外边距与属性配置 */
   @page {
-    size: auto; /* 自动适配（推荐由用户在打印预览面板中选择纵向/横向，以保留最大灵活性） */
-    margin: 1cm 0.6cm 1cm 0.6cm; /* 缩减左右外边距（从1cm降至0.6cm），为放大的内容腾出空间，使其不溢出页面 */
+    size: auto;
+    margin: 0.8cm 0.6cm 0.8cm 0.6cm;
   }
 }
 

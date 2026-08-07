@@ -18,6 +18,10 @@ export interface Quote {
   creator_id?: number | null;
   creator_name?: string | null;
   quote_date?: string | null;
+  pay_way?: string | null;
+  credit_period?: string | null;
+  remarks?: string | null;
+  attachment_path_array?: string | string[] | null;
 }
 
 export interface PrepareCreateQuoteData {
@@ -58,6 +62,10 @@ export interface SubmitQuotePayload {
     creator_id: number | null;
     creator_name: string;
     quote_date: string;
+    pay_way: string;
+    credit_period: string;
+    remarks: string;
+    attachment_path_array?: string[] | null;
   };
   quote_items: Array<{
     product_category_id: number | null;
@@ -99,8 +107,8 @@ export const submitQuoteApi = async (payload: SubmitQuotePayload): Promise<{ mes
 export interface QuoteProcess {
   id: number;
   quote_id: number | null;
-  create_employee_id: number | null;
-  create_employee_name: string | null;
+  creator_id: number | null;
+  creator_name: string | null;
   approver_id?: number | null;
   approver_name?: string | null;
   present_approver_id?: number | null;
@@ -117,8 +125,8 @@ export interface QuoteProcessNode {
   process_id: number | null;
   seq_num?: number | null;
   name: string | null;
-  approve_employee_id: number | null;
-  approve_employee_name: string | null;
+  approver_id: number | null;
+  approver_name: string | null;
   status: string | null;
   approve_comment: string | null;
   created_at: string | null;
@@ -226,11 +234,18 @@ export const myApplyQueryApi = async (userId: number): Promise<MyApplyQueryRespo
   }
 };
 
+export interface ApproveUser {
+  id: number;
+  name: string;
+  role: string;
+}
+
 export interface ApproveHandlePayload {
   action: 'approve' | 'reject';
   node_id: number;
   process_id: number;
   comment: string;
+  user?: ApproveUser;
 }
 
 export interface ApproveHandleResponse {

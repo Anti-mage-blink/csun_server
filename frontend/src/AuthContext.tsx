@@ -4,7 +4,6 @@ export interface User {
   id: number
   name: string
   role: string
-  wecomId?: string
 }
 
 interface AuthContextType {

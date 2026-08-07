@@ -78,7 +78,8 @@ const MyApprovals: React.FC = () => {
         action,
         node_id: currentNode.id,
         process_id: process.id,
-        comment: comment
+        comment: comment,
+        user: user ? { id: user.id, name: user.name, role: user.role } : undefined
       })
 
       // 使用统一反馈组件展示结果

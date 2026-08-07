@@ -22,6 +22,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		Customer:      newCustomer(db, opts...),
 		Employee:      newEmployee(db, opts...),
 		Process:       newProcess(db, opts...),
+		ProcessEdge:   newProcessEdge(db, opts...),
 		ProcessNode:   newProcessNode(db, opts...),
 		TableRegistry: newTableRegistry(db, opts...),
 	}
@@ -34,6 +35,7 @@ type Query struct {
 	Customer      customer
 	Employee      employee
 	Process       process
+	ProcessEdge   processEdge
 	ProcessNode   processNode
 	TableRegistry tableRegistry
 }
@@ -49,6 +51,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		Customer:      q.Customer.clone(db),
 		Employee:      q.Employee.clone(db),
 		Process:       q.Process.clone(db),
+		ProcessEdge:   q.ProcessEdge.clone(db),
 		ProcessNode:   q.ProcessNode.clone(db),
 		TableRegistry: q.TableRegistry.clone(db),
 	}
@@ -69,6 +72,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		Customer:      q.Customer.replaceDB(db),
 		Employee:      q.Employee.replaceDB(db),
 		Process:       q.Process.replaceDB(db),
+		ProcessEdge:   q.ProcessEdge.replaceDB(db),
 		ProcessNode:   q.ProcessNode.replaceDB(db),
 		TableRegistry: q.TableRegistry.replaceDB(db),
 	}
@@ -79,6 +83,7 @@ type queryCtx struct {
 	Customer      ICustomerDo
 	Employee      IEmployeeDo
 	Process       IProcessDo
+	ProcessEdge   IProcessEdgeDo
 	ProcessNode   IProcessNodeDo
 	TableRegistry ITableRegistryDo
 }
@@ -89,6 +94,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		Customer:      q.Customer.WithContext(ctx),
 		Employee:      q.Employee.WithContext(ctx),
 		Process:       q.Process.WithContext(ctx),
+		ProcessEdge:   q.ProcessEdge.WithContext(ctx),
 		ProcessNode:   q.ProcessNode.WithContext(ctx),
 		TableRegistry: q.TableRegistry.WithContext(ctx),
 	}

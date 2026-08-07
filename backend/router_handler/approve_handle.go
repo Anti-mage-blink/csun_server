@@ -40,6 +40,11 @@ func (h *ApproveHandleHandler) ApproveHandle(c *gin.Context) {
 		ProcessID: req.ProcessID,
 		Comment:   req.Comment,
 	}
+	if req.User != nil {
+		params.UserID = req.User.ID
+		params.UserName = req.User.Name
+		params.UserRole = req.User.Role
+	}
 
 	err := h.service.ApproveHandle(c.Request.Context(), params)
 	if err != nil {
@@ -59,10 +64,18 @@ func (h *ApproveHandleHandler) ApproveHandle(c *gin.Context) {
 	})
 }
 
+// ApproveUser 包含操作的用户信息
+type ApproveUser struct {
+	ID   int32  `json:"id"`
+	Name string `json:"name"`
+	Role string `json:"role"`
+}
+
 // ApproveHandleRequest 审批处理请求结构体
 type ApproveHandleRequest struct {
-	Action    string `json:"action" binding:"required,oneof=approve reject"`
-	NodeID    int32  `json:"node_id" binding:"required"`
-	ProcessID int32  `json:"process_id" binding:"required"`
-	Comment   string `json:"comment"`
+	Action    string       `json:"action" binding:"required,oneof=approve reject"`
+	NodeID    int32        `json:"node_id" binding:"required"`
+	ProcessID int32        `json:"process_id" binding:"required"`
+	Comment   string       `json:"comment"`
+	User      *ApproveUser `json:"user"`
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math"
 	"strconv"
 	"time"
 
@@ -12,15 +11,9 @@ import (
 	"csun_server-backend/dao/model/quote_manage"
 	general_query "csun_server-backend/dao/query/general"
 	quote_query "csun_server-backend/dao/query/quote_manage"
+	"csun_server-backend/utils"
 
 	"gorm.io/gorm"
-)
-
-const (
-	// FloatRateThresholdLow 报价浮动比例第一层审批阈值（5%）
-	FloatRateThresholdLow = 0.05
-	// FloatRateThresholdHigh 报价浮动比例第二层审批阈值（10%）
-	FloatRateThresholdHigh = 0.10
 )
 
 // CreateQuoteData 新建报价单返回给前端的全量数据
@@ -145,121 +138,122 @@ func (r *defaultCreateQuoteRepository) SaveQuoteWithItems(ctx context.Context, q
 		}
 
 		// 3. 新创建报价审批流记录：即quote_manage.quote_process
-		createdAtStr := time.Now().Format("2006-01-02 15:04:05")
+		now := time.Now()
 		defaultStatus := "待审批"
 		process := &quote_manage.QuoteProcess{
-			QuoteID:            &quote.ID,
-			CreateEmployeeID:   &userID,
-			CreateEmployeeName: &userName,
-			PresentStatus:      &defaultStatus,
-			CreatedAt:          &createdAtStr,
-			UpdatedAt:          &createdAtStr,
+			QuoteID:       &quote.ID,
+			CreatorID:     &userID,
+			CreatorName:   &userName,
+			PresentStatus: &defaultStatus,
+			CreatedAt:     &now,
+			UpdatedAt:     &now,
 		}
 		if err := qQuote.QuoteProcess.WithContext(ctx).Create(process); err != nil {
 			return err
 		}
 
-		// 4. 新创建报价审批流节点记录：即quote_manage.quote_process_node
-		node1Name := "发起报价单"
-		node1Status := "已通过"
-		node1Comment := "无"
-		seqNum1 := int32(1)
-		node1 := &quote_manage.QuoteProcessNode{
-			ProcessID:           &process.ID,
-			SeqNum:              &seqNum1,
-			Name:                &node1Name,
-			ApproveEmployeeID:   &userID,
-			ApproveEmployeeName: &userName,
-			Status:              &node1Status,
-			ApproveComment:      &node1Comment,
-			CreatedAt:           &createdAtStr,
-			ApproveAt:           &createdAtStr,
+		// 4. （意图）新创开始“发起报价单”节点：
+		// 调用“查询下一节点编号”函数
+		nextStartNode, err := utils.QueryNextNodeNum(ctx, r.db.General, process.PresentNodeNum, "", nil)
+		if err != nil {
+			return fmt.Errorf("查询开始节点失败: %w", err)
 		}
-		if err := qQuote.QuoteProcessNode.WithContext(ctx).Create(node1); err != nil {
-			return err
+		if nextStartNode == nil {
+			return fmt.Errorf("未找到开始流程节点")
 		}
 
-		// 5. 再根据浮动比例条件判断（5%和10%），去查对应角色的人（quote_manage数据库的employee_role表）
-		var targetEmployeeID int32
-		var targetEmployeeName string
+		// 构造节点实例记录 quote_process_node
+		var seqNum1 int32 = 1
+		statusPassed := "已通过"
+		startNodeInstance := &quote_manage.QuoteProcessNode{
+			ProcessID: &process.ID,
+			SeqNum:    &seqNum1,
+			NodeNum:   nextStartNode.NodeNum,
+			Name:      nextStartNode.Name,
+			Role:      nextStartNode.Role,
+			Status:    &statusPassed,
+			CreatedAt: &now,
+			ApproveAt: &now,
+		}
+		if err := qQuote.QuoteProcessNode.WithContext(ctx).Create(startNodeInstance); err != nil {
+			return fmt.Errorf("写入开始节点实例失败: %w", err)
+		}
 
-		// 默认
-		targetEmployeeID = 81
-		targetEmployeeName = "李永泉"
+		// 更新当前处理的 quote_process 记录
+		process.QuoteID = &quote.ID
+		process.CreatorID = &userID
+		process.CreatorName = &userName
+		process.PresentSeqNum = &seqNum1
+		process.PresentNodeNum = nextStartNode.NodeNum
+		process.CreatedAt = &now
 
-		if len(items) > 0 && items[0] != nil {
-			floatRate := 0.0
-			if items[0].QuoteFloatRate != nil {
-				floatRate = *items[0].QuoteFloatRate
+		if err := qQuote.QuoteProcess.WithContext(ctx).Save(process); err != nil {
+			return fmt.Errorf("更新审批流实例记录失败: %w", err)
+		}
+
+		// 5. （意图）新创“工作小组组长”节点：
+		// 调用“查询下一节点编号”函数
+		var mainCategory string
+		if len(items) > 0 && items[0] != nil && items[0].ProductCategoryName != nil {
+			mainCategory = *items[0].ProductCategoryName
+		}
+
+		nextGroupNode, err := utils.QueryNextNodeNum(ctx, r.db.General, process.PresentNodeNum, "main_category", mainCategory)
+		if err != nil {
+			return fmt.Errorf("查询下一审批节点失败: %w", err)
+		}
+		if nextGroupNode == nil {
+			return fmt.Errorf("未找到下一审批节点")
+		}
+
+		// 查到人：如果 next_node.role 不为空，去 quote_manage.employee_role 查到记录 employee_role
+		var approveEmpID *int32
+		var approveEmpName *string
+		if nextGroupNode.Role != nil && *nextGroupNode.Role != "" {
+			empRole, err := qQuote.EmployeeRole.WithContext(ctx).
+				Where(qQuote.EmployeeRole.Role.Eq(*nextGroupNode.Role)).
+				First()
+			if err == nil && empRole != nil {
+				approveEmpID = empRole.EmployeeID
+				approveEmpName = empRole.EmployeeName
 			}
-
-			// 兼容百分比数值和纯小数表示
-			rateVal := floatRate
-			if rateVal >= 1.0 || rateVal <= -1.0 {
-				rateVal = rateVal / 100.0
-			}
-
-			// 取浮动比例绝对值进行判断
-			absRateVal := math.Abs(rateVal)
-
-			if absRateVal < FloatRateThresholdLow {
-				// 根据产品主分类（报价明细第一个.main_category，对应ProductCategoryName）
-				category := ""
-				if items[0].ProductCategoryName != nil {
-					category = *items[0].ProductCategoryName
-				}
-				if category == "汽车涂层制动盘" {
-					targetEmployeeID = 2
-					targetEmployeeName = "李鹏涛"
-				} else {
-					targetEmployeeID = 81
-					targetEmployeeName = "李永泉"
-				}
-			} else if absRateVal >= FloatRateThresholdLow && absRateVal < FloatRateThresholdHigh {
-				targetEmployeeID = 4
-				targetEmployeeName = "廖语晴"
-			} else if absRateVal >= FloatRateThresholdHigh {
-				targetEmployeeID = 1
-				targetEmployeeName = "肖鹏"
-			}
 		}
 
-		// 用employee_id去general数据库employee查到姓名
-		emp, err := qGen.Employee.WithContext(ctx).Where(qGen.Employee.ID.Eq(targetEmployeeID)).First()
-		if err == nil && emp != nil && emp.Name != nil && *emp.Name != "" {
-			targetEmployeeName = *emp.Name
+		// 构造节点实例记录 quote_process_node
+		nextSeqNum := *process.PresentSeqNum + 1
+		statusPending := "待审批"
+
+		groupNodeInstance := &quote_manage.QuoteProcessNode{
+			ProcessID:    &process.ID,
+			SeqNum:       &nextSeqNum,
+			NodeNum:      nextGroupNode.NodeNum,
+			Name:         nextGroupNode.Name,
+			Role:         nextGroupNode.Role,
+			ApproverID:   approveEmpID,
+			ApproverName: approveEmpName,
+			Status:       &statusPending,
+			CreatedAt:    &now,
+		}
+		if err := qQuote.QuoteProcessNode.WithContext(ctx).Create(groupNodeInstance); err != nil {
+			return fmt.Errorf("写入审批节点实例失败: %w", err)
 		}
 
-		// 6. 新建报价审批流节点记录：即quote_manage.quote_process_node
-		node2Name := "报价审批"
-		node2Status := "待审批"
-		seqNum2 := int32(2)
-		node2 := &quote_manage.QuoteProcessNode{
-			ProcessID:           &process.ID,
-			SeqNum:              &seqNum2,
-			Name:                &node2Name,
-			ApproveEmployeeID:   &targetEmployeeID,
-			ApproveEmployeeName: &targetEmployeeName,
-			Status:              &node2Status,
-			CreatedAt:           &createdAtStr,
-		}
-		if err := qQuote.QuoteProcessNode.WithContext(ctx).Create(node2); err != nil {
-			return err
-		}
+		// 更新当前处理的 quote_process 记录
+		presentNodeID := groupNodeInstance.ID
+		process.QuoteID = &quote.ID
+		process.CreatorID = &userID
+		process.CreatorName = &userName
+		process.PresentStatus = &statusPending
+		process.PresentSeqNum = &nextSeqNum
+		process.PresentNodeNum = nextGroupNode.NodeNum
+		process.PresentNodeID = &presentNodeID
+		process.PresentNodeName = groupNodeInstance.Name
+		process.PresentApproverID = approveEmpID
+		process.PresentApproverName = approveEmpName
+		process.UpdatedAt = &now
 
-		// 7. 再回填刚刚新建报价单的一些字段（其实是指审批流记录 quote_process 的字段）
-		process.ApproverID = &targetEmployeeID
-		process.ApproverName = &targetEmployeeName
-		process.PresentNodeID = &node2.ID
-		process.PresentNodeName = &node2Name
-		process.PresentApproverID = node2.ApproveEmployeeID
-		process.PresentApproverName = node2.ApproveEmployeeName
-		process.PresentStatus = &defaultStatus
-		process.CreatedAt = &createdAtStr
-		process.UpdatedAt = &createdAtStr
-
-		if _, err := qQuote.QuoteProcess.WithContext(ctx).Where(qQuote.QuoteProcess.ID.Eq(process.ID)).Updates(process); err != nil {
-			return err
+		if err := qQuote.QuoteProcess.WithContext(ctx).Save(process); err != nil {
+			return fmt.Errorf("更新审批流实例记录失败: %w", err)
 		}
 
 		return nil
@@ -332,6 +326,12 @@ func (s *createQuoteService) SubmitQuote(ctx context.Context, quote *quote_manag
 	}
 	if len(items) == 0 {
 		return fmt.Errorf("quote items cannot be empty")
+	}
+	if quote.PayWay == nil || *quote.PayWay == "" {
+		return fmt.Errorf("付款方式(pay_way)不能为空")
+	}
+	if quote.CreditPeriod == nil || *quote.CreditPeriod == "" {
+		return fmt.Errorf("账期(credit_period)不能为空")
 	}
 	return s.repo.SaveQuoteWithItems(ctx, quote, items, userID, userName)
 }

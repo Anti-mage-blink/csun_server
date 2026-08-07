@@ -92,13 +92,30 @@ Feedback.handle = (resOrError: any, defaultSuccessMsg?: string, defaultErrorMsg?
     }
     showFeedback('error', errorMsg)
   } else {
-    let successMsg = defaultSuccessMsg || ''
+    // 成功处理分支：识别请求方式与文案特征
+    // 1. 获取请求 Method（从直接 config 或 axios 响应解包附加的 _config 中获取）
+    const config = resOrError?.config || resOrError?._config
+    const method = config?.method?.toLowerCase()
+
+    // 2. 拼接成功提示文案
+    let successMsg = ''
     if (resOrError.message) {
       successMsg = resOrError.message
     } else if (resOrError.msg) {
       successMsg = resOrError.msg
     } else if (typeof resOrError === 'string') {
       successMsg = resOrError
+    } else if (defaultSuccessMsg) {
+      successMsg = defaultSuccessMsg
+    }
+
+    // 3. 判断是否为纯查询/读取类操作：
+    // - HTTP 请求方式为 GET
+    // - 或者消息文案中包含常见的查询/读取关键字（查询、获取、加载、查看、列表等）
+    const isQueryOperation = method === 'get'
+
+    if (isQueryOperation) {
+      return // 纯查询/加载数据操作，成功时静默，不弹出反馈提示
     }
 
     if (successMsg) {

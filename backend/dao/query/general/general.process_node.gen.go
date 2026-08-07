@@ -30,7 +30,11 @@ func newProcessNode(db *gorm.DB, opts ...gen.DOOption) processNode {
 	_processNode.ALL = field.NewAsterisk(tableName)
 	_processNode.ID = field.NewInt32(tableName, "id")
 	_processNode.ProcessID = field.NewInt32(tableName, "process_id")
+	_processNode.ProcessName = field.NewString(tableName, "process_name")
+	_processNode.NodeNum = field.NewInt32(tableName, "node_num")
+	_processNode.NodeType = field.NewString(tableName, "node_type")
 	_processNode.Name = field.NewString(tableName, "name")
+	_processNode.Role = field.NewString(tableName, "role")
 
 	_processNode.fillFieldMap()
 
@@ -40,10 +44,14 @@ func newProcessNode(db *gorm.DB, opts ...gen.DOOption) processNode {
 type processNode struct {
 	processNodeDo
 
-	ALL       field.Asterisk
-	ID        field.Int32
-	ProcessID field.Int32
-	Name      field.String
+	ALL         field.Asterisk
+	ID          field.Int32
+	ProcessID   field.Int32
+	ProcessName field.String
+	NodeNum     field.Int32
+	NodeType    field.String
+	Name        field.String
+	Role        field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -62,7 +70,11 @@ func (p *processNode) updateTableName(table string) *processNode {
 	p.ALL = field.NewAsterisk(table)
 	p.ID = field.NewInt32(table, "id")
 	p.ProcessID = field.NewInt32(table, "process_id")
+	p.ProcessName = field.NewString(table, "process_name")
+	p.NodeNum = field.NewInt32(table, "node_num")
+	p.NodeType = field.NewString(table, "node_type")
 	p.Name = field.NewString(table, "name")
+	p.Role = field.NewString(table, "role")
 
 	p.fillFieldMap()
 
@@ -79,10 +91,14 @@ func (p *processNode) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (p *processNode) fillFieldMap() {
-	p.fieldMap = make(map[string]field.Expr, 3)
+	p.fieldMap = make(map[string]field.Expr, 7)
 	p.fieldMap["id"] = p.ID
 	p.fieldMap["process_id"] = p.ProcessID
+	p.fieldMap["process_name"] = p.ProcessName
+	p.fieldMap["node_num"] = p.NodeNum
+	p.fieldMap["node_type"] = p.NodeType
 	p.fieldMap["name"] = p.Name
+	p.fieldMap["role"] = p.Role
 }
 
 func (p processNode) clone(db *gorm.DB) processNode {

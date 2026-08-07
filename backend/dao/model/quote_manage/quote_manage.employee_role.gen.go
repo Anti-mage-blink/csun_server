@@ -8,9 +8,10 @@ const TableNameEmployeeRole = "quote_manage.employee_role"
 
 // EmployeeRole mapped from table <quote_manage.employee_role>
 type EmployeeRole struct {
-	ID         int32   `gorm:"column:id;type:int unsigned;primaryKey;autoIncrement:true" json:"id"`
-	EmployeeID *int32  `gorm:"column:employee_id;type:int unsigned" json:"employee_id"`
-	Role       *string `gorm:"column:role;type:varchar(255)" json:"role"`
+	ID           int32   `gorm:"column:id;type:int unsigned;primaryKey;autoIncrement:true" json:"id"`
+	EmployeeID   *int32  `gorm:"column:employee_id;type:int unsigned" json:"employee_id"`
+	EmployeeName *string `gorm:"column:employee_name;type:varchar(255)" json:"employee_name"`
+	Role         *string `gorm:"column:role;type:varchar(255)" json:"role"`
 }
 
 // TableName EmployeeRole's table name

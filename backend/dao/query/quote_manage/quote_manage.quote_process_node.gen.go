@@ -31,13 +31,15 @@ func newQuoteProcessNode(db *gorm.DB, opts ...gen.DOOption) quoteProcessNode {
 	_quoteProcessNode.ID = field.NewInt32(tableName, "id")
 	_quoteProcessNode.ProcessID = field.NewInt32(tableName, "process_id")
 	_quoteProcessNode.SeqNum = field.NewInt32(tableName, "seq_num")
+	_quoteProcessNode.NodeNum = field.NewInt32(tableName, "node_num")
 	_quoteProcessNode.Name = field.NewString(tableName, "name")
-	_quoteProcessNode.ApproveEmployeeID = field.NewInt32(tableName, "approve_employee_id")
-	_quoteProcessNode.ApproveEmployeeName = field.NewString(tableName, "approve_employee_name")
+	_quoteProcessNode.Role = field.NewString(tableName, "role")
 	_quoteProcessNode.Status = field.NewString(tableName, "status")
+	_quoteProcessNode.ApproverID = field.NewInt32(tableName, "approver_id")
+	_quoteProcessNode.ApproverName = field.NewString(tableName, "approver_name")
 	_quoteProcessNode.ApproveComment = field.NewString(tableName, "approve_comment")
-	_quoteProcessNode.CreatedAt = field.NewString(tableName, "created_at")
-	_quoteProcessNode.ApproveAt = field.NewString(tableName, "approve_at")
+	_quoteProcessNode.CreatedAt = field.NewTime(tableName, "created_at")
+	_quoteProcessNode.ApproveAt = field.NewTime(tableName, "approve_at")
 
 	_quoteProcessNode.fillFieldMap()
 
@@ -47,17 +49,19 @@ func newQuoteProcessNode(db *gorm.DB, opts ...gen.DOOption) quoteProcessNode {
 type quoteProcessNode struct {
 	quoteProcessNodeDo
 
-	ALL                 field.Asterisk
-	ID                  field.Int32
-	ProcessID           field.Int32
-	SeqNum              field.Int32
-	Name                field.String
-	ApproveEmployeeID   field.Int32
-	ApproveEmployeeName field.String
-	Status              field.String
-	ApproveComment      field.String
-	CreatedAt           field.String
-	ApproveAt           field.String
+	ALL            field.Asterisk
+	ID             field.Int32
+	ProcessID      field.Int32
+	SeqNum         field.Int32
+	NodeNum        field.Int32
+	Name           field.String
+	Role           field.String
+	Status         field.String
+	ApproverID     field.Int32
+	ApproverName   field.String
+	ApproveComment field.String
+	CreatedAt      field.Time
+	ApproveAt      field.Time
 
 	fieldMap map[string]field.Expr
 }
@@ -77,13 +81,15 @@ func (q *quoteProcessNode) updateTableName(table string) *quoteProcessNode {
 	q.ID = field.NewInt32(table, "id")
 	q.ProcessID = field.NewInt32(table, "process_id")
 	q.SeqNum = field.NewInt32(table, "seq_num")
+	q.NodeNum = field.NewInt32(table, "node_num")
 	q.Name = field.NewString(table, "name")
-	q.ApproveEmployeeID = field.NewInt32(table, "approve_employee_id")
-	q.ApproveEmployeeName = field.NewString(table, "approve_employee_name")
+	q.Role = field.NewString(table, "role")
 	q.Status = field.NewString(table, "status")
+	q.ApproverID = field.NewInt32(table, "approver_id")
+	q.ApproverName = field.NewString(table, "approver_name")
 	q.ApproveComment = field.NewString(table, "approve_comment")
-	q.CreatedAt = field.NewString(table, "created_at")
-	q.ApproveAt = field.NewString(table, "approve_at")
+	q.CreatedAt = field.NewTime(table, "created_at")
+	q.ApproveAt = field.NewTime(table, "approve_at")
 
 	q.fillFieldMap()
 
@@ -100,14 +106,16 @@ func (q *quoteProcessNode) GetFieldByName(fieldName string) (field.OrderExpr, bo
 }
 
 func (q *quoteProcessNode) fillFieldMap() {
-	q.fieldMap = make(map[string]field.Expr, 10)
+	q.fieldMap = make(map[string]field.Expr, 12)
 	q.fieldMap["id"] = q.ID
 	q.fieldMap["process_id"] = q.ProcessID
 	q.fieldMap["seq_num"] = q.SeqNum
+	q.fieldMap["node_num"] = q.NodeNum
 	q.fieldMap["name"] = q.Name
-	q.fieldMap["approve_employee_id"] = q.ApproveEmployeeID
-	q.fieldMap["approve_employee_name"] = q.ApproveEmployeeName
+	q.fieldMap["role"] = q.Role
 	q.fieldMap["status"] = q.Status
+	q.fieldMap["approver_id"] = q.ApproverID
+	q.fieldMap["approver_name"] = q.ApproverName
 	q.fieldMap["approve_comment"] = q.ApproveComment
 	q.fieldMap["created_at"] = q.CreatedAt
 	q.fieldMap["approve_at"] = q.ApproveAt

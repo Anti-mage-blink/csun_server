@@ -8,9 +8,13 @@ const TableNameProcessNode = "general.process_node"
 
 // ProcessNode mapped from table <general.process_node>
 type ProcessNode struct {
-	ID        int32   `gorm:"column:id;type:int unsigned;primaryKey;autoIncrement:true" json:"id"`
-	ProcessID *int32  `gorm:"column:process_id;type:int unsigned;index:process,priority:1" json:"process_id"`
-	Name      *string `gorm:"column:name;type:varchar(255)" json:"name"`
+	ID          int32   `gorm:"column:id;type:int unsigned;primaryKey;autoIncrement:true" json:"id"`
+	ProcessID   *int32  `gorm:"column:process_id;type:int unsigned;index:process,priority:1" json:"process_id"`
+	ProcessName *string `gorm:"column:process_name;type:varchar(255)" json:"process_name"`
+	NodeNum     *int32  `gorm:"column:node_num;type:int unsigned" json:"node_num"`
+	NodeType    *string `gorm:"column:node_type;type:varchar(255)" json:"node_type"`
+	Name        *string `gorm:"column:name;type:varchar(255)" json:"name"`
+	Role        *string `gorm:"column:role;type:varchar(255)" json:"role"`
 }
 
 // TableName ProcessNode's table name

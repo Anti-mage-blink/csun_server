@@ -32,7 +32,6 @@ export const loginApi = async (username: string, password: string): Promise<Logi
       id: backendData.data.id,
       name: backendData.data.name || username,
       role: backendData.data.role || '普通员工', // 使用后端返回的特定角色字段
-      wecomId: '' // 暂无
     }
     
     console.log('[Login API Debug] 适配转换后的前端 User 对象:', mappedUser)

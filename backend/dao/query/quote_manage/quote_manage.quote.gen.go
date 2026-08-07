@@ -38,8 +38,10 @@ func newQuote(db *gorm.DB, opts ...gen.DOOption) quote {
 	_quote.CreatorID = field.NewInt32(tableName, "creator_id")
 	_quote.CreatorName = field.NewString(tableName, "creator_name")
 	_quote.QuoteDate = field.NewTime(tableName, "quote_date")
+	_quote.PayWay = field.NewString(tableName, "pay_way")
+	_quote.CreditPeriod = field.NewString(tableName, "credit_period")
 	_quote.Remarks = field.NewString(tableName, "remarks")
-	_quote.AttachmentPath = field.NewString(tableName, "attachment_path")
+	_quote.AttachmentPathArray = field.NewString(tableName, "attachment_path_array")
 
 	_quote.fillFieldMap()
 
@@ -49,19 +51,21 @@ func newQuote(db *gorm.DB, opts ...gen.DOOption) quote {
 type quote struct {
 	quoteDo
 
-	ALL            field.Asterisk
-	ID             field.Int32
-	QuoteCode      field.String
-	CustomerID     field.Int32
-	CustomerName   field.String
-	ContactName    field.String
-	ContactTitle   field.String
-	ValidDays      field.String
-	CreatorID      field.Int32
-	CreatorName    field.String
-	QuoteDate      field.Time
-	Remarks        field.String
-	AttachmentPath field.String
+	ALL                 field.Asterisk
+	ID                  field.Int32
+	QuoteCode           field.String
+	CustomerID          field.Int32
+	CustomerName        field.String
+	ContactName         field.String
+	ContactTitle        field.String
+	ValidDays           field.String
+	CreatorID           field.Int32
+	CreatorName         field.String
+	QuoteDate           field.Time
+	PayWay              field.String
+	CreditPeriod        field.String
+	Remarks             field.String
+	AttachmentPathArray field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -88,8 +92,10 @@ func (q *quote) updateTableName(table string) *quote {
 	q.CreatorID = field.NewInt32(table, "creator_id")
 	q.CreatorName = field.NewString(table, "creator_name")
 	q.QuoteDate = field.NewTime(table, "quote_date")
+	q.PayWay = field.NewString(table, "pay_way")
+	q.CreditPeriod = field.NewString(table, "credit_period")
 	q.Remarks = field.NewString(table, "remarks")
-	q.AttachmentPath = field.NewString(table, "attachment_path")
+	q.AttachmentPathArray = field.NewString(table, "attachment_path_array")
 
 	q.fillFieldMap()
 
@@ -106,7 +112,7 @@ func (q *quote) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (q *quote) fillFieldMap() {
-	q.fieldMap = make(map[string]field.Expr, 12)
+	q.fieldMap = make(map[string]field.Expr, 14)
 	q.fieldMap["id"] = q.ID
 	q.fieldMap["quote_code"] = q.QuoteCode
 	q.fieldMap["customer_id"] = q.CustomerID
@@ -117,8 +123,10 @@ func (q *quote) fillFieldMap() {
 	q.fieldMap["creator_id"] = q.CreatorID
 	q.fieldMap["creator_name"] = q.CreatorName
 	q.fieldMap["quote_date"] = q.QuoteDate
+	q.fieldMap["pay_way"] = q.PayWay
+	q.fieldMap["credit_period"] = q.CreditPeriod
 	q.fieldMap["remarks"] = q.Remarks
-	q.fieldMap["attachment_path"] = q.AttachmentPath
+	q.fieldMap["attachment_path_array"] = q.AttachmentPathArray
 }
 
 func (q quote) clone(db *gorm.DB) quote {

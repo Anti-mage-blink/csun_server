@@ -172,17 +172,46 @@ func TestCreateQuoteService_SubmitQuote(t *testing.T) {
 		}
 	})
 
-	t.Run("SubmitQuote success", func(t *testing.T) {
+	t.Run("SubmitQuote missing pay_way or credit_period returns error", func(t *testing.T) {
+		mockRepo := newDefaultMockRepo()
+		svc := NewMockCreateQuoteService(mockRepo)
+
+		payWay := "银行转账"
+		creditPeriod := "30天"
+
+		// 缺少 pay_way
+		err := svc.SubmitQuote(ctx, &quote_manage.Quote{CreditPeriod: &creditPeriod}, []*quote_manage.AQuoteItem{{}}, 1, "test")
+		if err == nil {
+			t.Error("expected error for missing pay_way")
+		}
+
+		// 缺少 credit_period
+		err = svc.SubmitQuote(ctx, &quote_manage.Quote{PayWay: &payWay}, []*quote_manage.AQuoteItem{{}}, 1, "test")
+		if err == nil {
+			t.Error("expected error for missing credit_period")
+		}
+	})
+
+	t.Run("SubmitQuote success with all 4 new fields", func(t *testing.T) {
 		mockRepo := newDefaultMockRepo()
 		svc := NewMockCreateQuoteService(mockRepo)
 
 		compName := "测试公司"
 		contName := "张三"
 		contTitle := "经理"
+		payWay := "银行转账"
+		creditPeriod := "30天"
+		remarks := "加急订单"
+		attachmentPathArray := `["/upload/doc1.pdf"]`
+
 		q := &quote_manage.Quote{
-			CustomerName: &compName,
-			ContactName:  &contName,
-			ContactTitle: &contTitle,
+			CustomerName:        &compName,
+			ContactName:         &contName,
+			ContactTitle:        &contTitle,
+			PayWay:              &payWay,
+			CreditPeriod:        &creditPeriod,
+			Remarks:             &remarks,
+			AttachmentPathArray: &attachmentPathArray,
 		}
 		items := []*quote_manage.AQuoteItem{{}}
 

@@ -102,12 +102,22 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
   // 2. 获取该流程对应的当前审批/进行节点
   const getProcessCurrentNode = (process: QuoteProcess): QuoteProcessNode | undefined => {
     if (mode === 'approve' && currentUserId) {
-      // 待我审批模式下，当前阶段优先关联当前用户的“待审批”节点
-      return quoteProcessNodes.find(n => 
+      // 待我审批模式下，优先关联当前用户的“待审批”节点
+      const userPendingNode = quoteProcessNodes.find(n => 
         n.process_id === process.id && 
-        n.approve_employee_id === currentUserId && 
+        n.approver_id === currentUserId && 
         n.status === '待审批'
       )
+      if (userPendingNode) return userPendingNode
+
+      // 若当前用户没有“待审批”节点，关联当前用户属于该流程的节点
+      const userNodes = quoteProcessNodes.filter(n =>
+        n.process_id === process.id &&
+        n.approver_id === currentUserId
+      )
+      if (userNodes.length > 0) {
+        return [...userNodes].sort((a, b) => b.id - a.id)[0]
+      }
     }
     
     // 其它模式下，寻找该流程下任意一个状态为 "待审批" 的节点
@@ -128,13 +138,10 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
 
     if (mode === 'my-submit' && currentUserId !== undefined) {
       // 我发起的审批：过滤出发起人是当前用户的流程
-      list = quoteProcesses.filter(p => p.create_employee_id === currentUserId)
+      list = quoteProcesses.filter(p => p.creator_id === currentUserId)
     } else if (mode === 'approve' && currentUserId !== undefined) {
-      // 我的审批：展示当前审批人的所有流程（包含“待审批”及已审批的“历史记录”）
-      list = quoteProcesses.filter(p => p.approver_id === currentUserId || p.approver_id === undefined || p.approver_id === null)
-      if (list.length === 0 && quoteProcesses.length > 0) {
-        list = quoteProcesses
-      }
+      // 我的审批：后端已按节点的 approver_id == user.id 查出相关流程，全量展示
+      list = quoteProcesses
     } else {
       // 备案查看（或其他情况）：不过滤，全量展示
       list = quoteProcesses
@@ -268,7 +275,7 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
         currentNode,
         quote_code: quote?.quote_code || '未知编号',
         customer_name: quote?.customer_name || '未知客户',
-        creator_name: quote?.creator_name || process.create_employee_name || '未知经办人',
+        creator_name: quote?.creator_name || process.creator_name || '未知经办人',
         quote_date: rawQuoteDate ? dayjs(rawQuoteDate).format('YYYY-MM-DD') : '未知日期',
         currentNodeName: currentNode?.name || '审批完成',
         currentNodeStatus: currentNode?.status || '已结束',
@@ -313,7 +320,7 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
           let color = 'orange'
           let icon = <ClockCircleOutlined />
           let className = ''
-          if (status === '已通过') {
+          if (status === '已通过' || status === '已同意') {
             color = 'green'
             icon = <CheckCircleOutlined />
           } else if (status === '已拒绝') {
@@ -359,8 +366,19 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
     )
 
     if (mode === 'approve') {
-      const pendingProcesses = filteredProcesses.filter(p => (p.present_status || '待审批') === '待审批')
-      const approvedProcesses = filteredProcesses.filter(p => (p.present_status || '待审批') !== '待审批')
+      // 在“我的审批”模式下，对于每一簇报价数据，先从 quote_process_node 列表中找到 approver_id == user.id 的节点：
+      // 若该节点的 status === '待审批' →→ 归入 “待审批” 列表。
+      // 若该节点的 status !== '待审批'（如 '已通过'、'已拒绝'）→→ 归入 “已审批 (非待审批)” 列表。
+      const isUserPendingProcess = (process: QuoteProcess): boolean => {
+        const userNodes = quoteProcessNodes.filter(n => 
+          n.process_id === process.id && 
+          (currentUserId === undefined || n.approver_id === currentUserId)
+        )
+        return userNodes.some(n => n.status === '待审批')
+      }
+
+      const pendingProcesses = filteredProcesses.filter(p => isUserPendingProcess(p))
+      const approvedProcesses = filteredProcesses.filter(p => !isUserPendingProcess(p))
 
       const pendingDataSource = pendingProcesses.map(mapProcessToRow)
       const approvedDataSource = approvedProcesses.map(mapProcessToRow)
@@ -473,7 +491,7 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
       const statusVal = status || '待审批'
       let color = 'gold'
       let className = ''
-      if (statusVal === '已通过') {
+      if (statusVal === '已通过' || statusVal === '已同意') {
         color = 'green'
       } else if (statusVal === '已拒绝') {
         color = 'red'
@@ -617,22 +635,53 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
                 <Descriptions.Item label="客户名称">{quote?.customer_name}</Descriptions.Item>
                 <Descriptions.Item label="联系人">{quote?.contact_name || '无'}</Descriptions.Item>
                 <Descriptions.Item label="职位">{quote?.contact_title || '无'}</Descriptions.Item>
-                <Descriptions.Item label="市场部经办人">{quote?.creator_name || selectedProcess.create_employee_name}</Descriptions.Item>
+                <Descriptions.Item label="市场部经办人">{quote?.creator_name || selectedProcess.creator_name}</Descriptions.Item>
                 <Descriptions.Item label="报价日期">
                   {quote?.quote_date ? dayjs(quote.quote_date).format('YYYY-MM-DD') : '未知日期'}
                 </Descriptions.Item>
-                <Descriptions.Item label="报价有效期">{quote?.valid_days} 天</Descriptions.Item>
+                <Descriptions.Item label="报价有效期">{quote?.valid_days ? `${quote.valid_days} 天` : '无'}</Descriptions.Item>
+                <Descriptions.Item label="付款方式">{quote?.pay_way || '无'}</Descriptions.Item>
+                <Descriptions.Item label="账期">{quote?.credit_period || '无'}</Descriptions.Item>
+                <Descriptions.Item label="说明" span={2}>{quote?.remarks || '无'}</Descriptions.Item>
+                <Descriptions.Item label="附件" span={2}>
+                  {(() => {
+                    const raw = quote?.attachment_path_array;
+                    let list: string[] = [];
+                    if (Array.isArray(raw)) {
+                      list = raw;
+                    } else if (typeof raw === 'string' && raw.trim()) {
+                      try {
+                        const parsed = JSON.parse(raw);
+                        if (Array.isArray(parsed)) list = parsed;
+                        else list = [raw];
+                      } catch {
+                        list = [raw];
+                      }
+                    }
+                    if (list.length === 0) {
+                      return <span style={{ color: '#8c8c8c' }}>无</span>;
+                    }
+                    return (
+                      <Space direction="vertical" size={2}>
+                        {list.map((item, idx) => (
+                          <a key={idx} href={item} target="_blank" rel="noopener noreferrer">
+                            {item.split('/').pop() || item}
+                          </a>
+                        ))}
+                      </Space>
+                    );
+                  })()}
+                </Descriptions.Item>
               </Descriptions>
             </Card>
 
-            <Card title="报价明细" className="mb-16 card-shadow">
+            <Card title="报价明细" className="mb-16 card-shadow detail-quote-items-card">
               <Table 
                 dataSource={items} 
                 columns={itemColumns} 
                 rowKey="id" 
                 pagination={false} 
                 size="small"
-                scroll={{ x: 'max-content' }}
               />
             </Card>
 
@@ -701,28 +750,32 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
                     let titleColor = 'gray'
 
                     const isWithdrawn = currentProcess.present_status === '已撤回'
+                    const statusStr = node.status || ''
+                    const isPassed = statusStr === '已通过' || statusStr === '已同意' || statusStr.includes('通过') || statusStr.includes('同意')
+                    const isPending = statusStr === '待审批' || statusStr.includes('待')
+                    const isRejected = statusStr === '已拒绝' || statusStr.includes('拒绝') || statusStr.includes('退回')
 
                     if (isWithdrawn) {
                       stepStatus = 'wait'
                       titleColor = '#8c8c8c'
-                      if (node.status === '已通过') {
+                      if (isPassed) {
                         icon = <CheckCircleOutlined style={{ color: '#8c8c8c' }} />
-                      } else if (node.status === '已拒绝') {
+                      } else if (isRejected) {
                         icon = <CloseCircleOutlined style={{ color: '#8c8c8c' }} />
-                      } else if (node.status === '待审批') {
+                      } else if (isPending) {
                         icon = <PlayCircleOutlined style={{ color: '#8c8c8c' }} />
                       } else {
                         icon = <ClockCircleOutlined style={{ color: '#8c8c8c' }} />
                       }
-                    } else if (node.status === '已通过') {
+                    } else if (isPassed) {
                       stepStatus = 'finish'
                       icon = <CheckCircleOutlined style={{ color: '#52c41a' }} />
                       titleColor = '#52c41a'
-                    } else if (node.status === '待审批') {
+                    } else if (isPending) {
                       stepStatus = 'process'
                       icon = <PlayCircleOutlined style={{ color: '#1890ff' }} />
                       titleColor = '#1890ff'
-                    } else if (node.status === '已拒绝') {
+                    } else if (isRejected) {
                       stepStatus = 'error'
                       icon = <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
                       titleColor = '#ff4d4f'
@@ -740,7 +793,7 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
                         }
                         description={
                           <div className="step-description-box">
-                            <p><strong>处理人：</strong>{node.approve_employee_name} <Tag>{node.status}</Tag></p>
+                            <p><strong>处理人：</strong>{node.approver_name} <Tag>{node.status}</Tag></p>
                             {node.created_at && (
                               <p className="step-time"><strong>到达时间：</strong>{new Date(node.created_at).toLocaleString()}</p>
                             )}

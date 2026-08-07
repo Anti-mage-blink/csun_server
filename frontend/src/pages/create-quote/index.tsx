@@ -12,9 +12,10 @@ import {
   Select,
   InputNumber,
   Popconfirm,
-  Space
+  Space,
+  Upload
 } from 'antd';
-import { SaveOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { SaveOutlined, PlusOutlined, DeleteOutlined, UploadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { useAuth } from '@/AuthContext';
 import DropdownMenu from '@/components/dropdownMenu';
@@ -93,6 +94,10 @@ const CreateQuote: React.FC = () => {
           customer_name: '',
           contact_name: '',
           contact_title: '',
+          pay_way: '',
+          credit_period: '',
+          remarks: '',
+          attachment_path_array: null,
         };
         setQuote(initialQuote);
 
@@ -248,6 +253,30 @@ const CreateQuote: React.FC = () => {
     });
   };
 
+  // 4.5 付款方式、账期、说明双向绑定变动
+  const handlePayWayChange = (val: string) => {
+    setQuote((prev) => {
+      if (!prev) return null;
+      return { ...prev, pay_way: val };
+    });
+  };
+
+  const handleCreditPeriodChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setQuote((prev) => {
+      if (!prev) return null;
+      return { ...prev, credit_period: val };
+    });
+  };
+
+  const handleRemarksChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setQuote((prev) => {
+      if (!prev) return null;
+      return { ...prev, remarks: val };
+    });
+  };
+
   // 5. 报价明细行数据修改（双向状态修改 与 联动逻辑）
   const updateRow = (key: string, updatedFields: Partial<FormQuoteItem>) => {
     setQuoteItems((prev) =>
@@ -361,6 +390,16 @@ const CreateQuote: React.FC = () => {
       return;
     }
 
+    if (!quote.pay_way) {
+      Feedback.error('请选择付款方式');
+      return;
+    }
+
+    if (!quote.credit_period || !quote.credit_period.trim()) {
+      Feedback.error('请填写账期');
+      return;
+    }
+
     if (quoteItems.length === 0) {
       Feedback.error('请添加至少一条报价明细行');
       return;
@@ -407,6 +446,10 @@ const CreateQuote: React.FC = () => {
           creator_id: quote.creator_id !== undefined ? quote.creator_id : null,
           creator_name: quote.creator_name || '未知经办人',
           quote_date: dayjs(quote.quote_date).toISOString(),
+          pay_way: quote.pay_way || '',
+          credit_period: quote.credit_period || '',
+          remarks: quote.remarks || '',
+          attachment_path_array: Array.isArray(quote.attachment_path_array) ? quote.attachment_path_array : null,
         },
         quote_items: quoteItems.map((item) => ({
           product_category_id: item.product_category_id,
@@ -444,6 +487,10 @@ const CreateQuote: React.FC = () => {
         customer_name: '',
         contact_name: '',
         contact_title: '',
+        pay_way: '',
+        credit_period: '',
+        remarks: '',
+        attachment_path_array: null,
       };
       setQuote(nextQuote);
 
@@ -750,6 +797,64 @@ const CreateQuote: React.FC = () => {
             <Col xs={24} sm={12} md={8}>
               <Form.Item label="报价日期" className="custom-form-item">
                 <Input disabled value={quote?.quote_date ? dayjs(quote.quote_date).format('YYYY-MM-DD') : ''} />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          {/* 第三行 */}
+          <Row gutter={24} className="form-row">
+            <Col xs={24} sm={12} md={12}>
+              <Form.Item label="付款方式 *" className="custom-form-item">
+                <Space>
+                  {['银行转账', '银承', '商票'].map((way) => (
+                    <Button
+                      key={way}
+                      type={quote?.pay_way === way ? 'primary' : 'default'}
+                      onClick={() => handlePayWayChange(way)}
+                    >
+                      {way}
+                    </Button>
+                  ))}
+                </Space>
+              </Form.Item>
+            </Col>
+
+            <Col xs={24} sm={12} md={12}>
+              <Form.Item label="账期 *" className="custom-form-item">
+                <Input
+                  placeholder="请输入账期 (如: 30天 / 收到发票后30天)"
+                  value={quote?.credit_period || ''}
+                  onChange={handleCreditPeriodChange}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          {/* 第四行 */}
+          <Row gutter={24} className="form-row">
+            <Col xs={24} sm={12} md={12}>
+              <Form.Item label="说明" className="custom-form-item">
+                <Input.TextArea
+                  rows={2}
+                  placeholder="请输入备注说明信息"
+                  value={quote?.remarks || ''}
+                  onChange={handleRemarksChange}
+                />
+              </Form.Item>
+            </Col>
+
+            <Col xs={24} sm={12} md={12}>
+              <Form.Item label="附件" className="custom-form-item">
+                <Upload
+                  beforeUpload={() => false}
+                  multiple
+                  fileList={[]}
+                  onChange={() => {
+                    Feedback.warning('附件上传功能后续实现');
+                  }}
+                >
+                  <Button icon={<UploadOutlined />}>上传附件</Button>
+                </Upload>
               </Form.Item>
             </Col>
           </Row>

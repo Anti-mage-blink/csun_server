@@ -66,20 +66,20 @@ func (r *defaultWithdrawQuoteRepository) WithdrawQuote(ctx context.Context, para
 		}
 
 		// 3. 新增一个节点记录：quote_process_node
-		nowStr := time.Now().Format("2006-01-02 15:04:05")
+		now := time.Now()
 		seqNum := int32(2)
 		nodeName := "撤回报价单"
 		statusPass := "已通过"
 
 		newNode := &quote_manage.QuoteProcessNode{
-			ProcessID:           &params.ProcessID,
-			SeqNum:              &seqNum,
-			Name:                &nodeName,
-			ApproveEmployeeID:   &params.UserID,
-			ApproveEmployeeName: &params.UserName,
-			Status:              &statusPass,
-			CreatedAt:           &nowStr,
-			ApproveAt:           &nowStr,
+			ProcessID:    &params.ProcessID,
+			SeqNum:       &seqNum,
+			Name:         &nodeName,
+			ApproverID:   &params.UserID,
+			ApproverName: &params.UserName,
+			Status:       &statusPass,
+			CreatedAt:    &now,
+			ApproveAt:    &now,
 		}
 
 		if err := q.QuoteProcessNode.WithContext(ctx).Create(newNode); err != nil {

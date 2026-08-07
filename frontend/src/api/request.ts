@@ -28,14 +28,23 @@ request.interceptors.request.use(
   (error) => Promise.reject(error),
 )
 
-// 响应拦截器（占位：待接口开发阶段实现统一错误处理 / 数据解包）
+// 响应拦截器（统一注入请求配置上下文，供 Feedback 等辅助组件识别方法与路径）
 request.interceptors.response.use(
   (response: AxiosResponse) => {
-    // TODO: 统一处理后端返回结构（如 { code, message, data }）
+    if (response.data && typeof response.data === 'object') {
+      try {
+        Object.defineProperty(response.data, '_config', {
+          value: response.config,
+          writable: true,
+          enumerable: false, // 设为不可枚举，避免影响 JSON 遍历或数据处理
+        })
+      } catch (e) {
+        // 忽略定义失败的特殊对象
+      }
+    }
     return response
   },
   (error) => {
-    // TODO: 统一错误提示（如 401 跳登录、500 全局提示）
     return Promise.reject(error)
   },
 )
