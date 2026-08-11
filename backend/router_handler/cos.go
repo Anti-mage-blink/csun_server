@@ -87,6 +87,7 @@ func (h *COSHandler) UploadFile(c *gin.Context) {
 
 	_, err = client.Object.Put(c.Request.Context(), key, file, opt)
 	if err != nil {
+		log.Printf("[COS Error] 上传文件失败: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "上传文件至 COS 失败: " + err.Error()})
 		return
 	}
