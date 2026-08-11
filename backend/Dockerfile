@@ -15,6 +15,8 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/app .
 
 FROM ubuntu:24.04
+# 安装 CA 根证书，确保 Go HTTPS 请求能够正常校验 TLS 证书
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*
 RUN groupadd -r app && useradd -r -g app -u 65532 -s /usr/sbin/nologin app
 WORKDIR /app
 COPY --from=builder /out/app /app/app
