@@ -26,6 +26,7 @@ import {
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { QuoteProcess, QuoteProcessNode, Quote, QuoteItem } from '@/api/quote'
+import { parseFilenameFromPath, downloadCosFile } from '@/utils/file'
 import './index.css'
 
 const { TextArea } = Input
@@ -663,11 +664,22 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
                     }
                     return (
                       <Space direction="vertical" size={2}>
-                        {list.map((item, idx) => (
-                          <a key={idx} href={item} target="_blank" rel="noopener noreferrer">
-                            {item.split('/').pop() || item}
-                          </a>
-                        ))}
+                        {list.map((item, idx) => {
+                          const fileName = parseFilenameFromPath(item);
+                          return (
+                            <a
+                              key={idx}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                downloadCosFile(item);
+                              }}
+                              style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                              title={`点击下载附件: ${fileName}`}
+                            >
+                              {fileName}
+                            </a>
+                          );
+                        })}
                       </Space>
                     );
                   })()}

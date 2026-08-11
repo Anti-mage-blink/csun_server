@@ -143,8 +143,8 @@ func main() {
 	router_handler.RegisterWithdrawQuoteRoutes(r, withdrawQuoteHandler)
 	// 注册 DataTable 路由
 	router_handler.RegisterDataTableRoutes(r, dataTableHandler)
-	// 注册 COS 测试路由（跑通 COS 上传与下载测试，方便随时删除）
-	router_handler.RegisterTestCOSRoutes(r)
+	// 注册 COS 附件路由
+	router_handler.RegisterCOSRoutes(r)
 
 	// 根路由：返回 JSON 格式的 Hello World
 	r.GET("/", func(c *gin.Context) {

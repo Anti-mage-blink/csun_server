@@ -75,3 +75,21 @@
   margin-top: 4px;
   display: block;
 }
+
+/* 页内附件模块样式 */
+.quote-attachment-uploader {
+  width: 100%;
+}
+
+.attachment-temp-list {
+  margin-top: 8px;
+  background: #fafafa;
+  border-radius: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.attachment-temp-list .ant-list-item {
+  padding: 8px 12px;
+}
+

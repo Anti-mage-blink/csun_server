@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Form,
   Row,
@@ -13,18 +13,264 @@ import {
   InputNumber,
   Popconfirm,
   Space,
-  Upload
+  List,
+  Tag,
+  Divider,
 } from 'antd';
-import { SaveOutlined, PlusOutlined, DeleteOutlined, UploadOutlined } from '@ant-design/icons';
+import { SaveOutlined, PlusOutlined, DeleteOutlined, UploadOutlined, EyeOutlined, FileTextOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { useAuth } from '@/AuthContext';
 import DropdownMenu from '@/components/dropdownMenu';
 import { enterCreateQuoteApi, submitQuoteApi, type CustomerRecord, type Quote, type SubmitQuotePayload } from '@/api/quote';
+import request from '@/api/request';
 import Feedback from '@/components/Feedback';
 import './index.css';
 
 const { Title } = Typography;
 const { Option } = Select;
+
+// ==================== 附件页内专有模块 ====================
+
+// 1. 临时待上传附件类型（保存在前端内存中）
+export interface TempAttachment {
+  id: string;
+  file: File;
+  objectUrl: string; // 本地 Blob 预览链接
+  name: string;
+  size: number;
+}
+
+const MAX_FILE_SIZE = 16 * 1024 * 1024; // 16MB 限制
+
+// 格式化文件大小
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
+/**
+ * 为本地 File 对象生成带有 charset=utf-8 编码声明的临时 Blob URL
+ * 解决文本文件 (.md/.txt/.json等) 缺少字符集属性导致浏览器在新标签页预览为乱码的问题
+ */
+const createTextBlobUrl = (file: File): string => {
+  let mimeType = file.type;
+  const fileName = file.name.toLowerCase();
+
+  const isText =
+    mimeType.startsWith('text/') ||
+    fileName.endsWith('.md') ||
+    fileName.endsWith('.txt') ||
+    fileName.endsWith('.json') ||
+    fileName.endsWith('.csv') ||
+    fileName.endsWith('.xml') ||
+    fileName.endsWith('.html') ||
+    fileName.endsWith('.js') ||
+    fileName.endsWith('.ts');
+
+  if (isText) {
+    if (!mimeType || mimeType === 'text/plain') {
+      if (fileName.endsWith('.md')) mimeType = 'text/markdown';
+      else if (fileName.endsWith('.json')) mimeType = 'application/json';
+      else mimeType = 'text/plain';
+    }
+    if (!mimeType.includes('charset')) {
+      mimeType = `${mimeType};charset=utf-8`;
+    }
+    const blob = new Blob([file], { type: mimeType });
+    return URL.createObjectURL(blob);
+  }
+
+  return URL.createObjectURL(file);
+};
+
+interface QuoteAttachmentUploaderProps {
+  tempAttachments: TempAttachment[];
+  onAddAttachments: (newItems: TempAttachment[]) => void;
+  onRemoveAttachment: (id: string) => void;
+  onClearAttachments: () => void;
+}
+
+/**
+ * 页内附件上传与暂存组件
+ * 职责：点击选择多个文件、16MB 限制校验、内存临时暂存、生成的带有 UTF-8 编码的 Blob 预览链接展示（点击可打开预览）
+ */
+const QuoteAttachmentUploader: React.FC<QuoteAttachmentUploaderProps> = ({
+  tempAttachments,
+  onAddAttachments,
+  onRemoveAttachment,
+  onClearAttachments,
+}) => {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleSelectFilesClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''; // 清空历史选择，确保重复选相同文件能正常触发
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const newTemps: TempAttachment[] = [];
+    let oversizeCount = 0;
+
+    Array.from(files).forEach((file) => {
+      if (file.size > MAX_FILE_SIZE) {
+        oversizeCount++;
+        return;
+      }
+      const objectUrl = createTextBlobUrl(file);
+      newTemps.push({
+        id: `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+        file,
+        objectUrl,
+        name: file.name,
+        size: file.size,
+      });
+    });
+
+    if (oversizeCount > 0) {
+      Feedback.error(`${oversizeCount} 个文件大小超过 16MB 限制被跳过！`);
+    }
+
+    if (newTemps.length > 0) {
+      onAddAttachments(newTemps);
+      Feedback.success(`成功添加并暂存 ${newTemps.length} 个附件`);
+    }
+  };
+
+  /**
+   * 判断文件扩展名是否能在浏览器中直接预览（图片、PDF、文本/代码文件等）
+   */
+  const isPreviewableFile = (fileName: string): boolean => {
+    if (!fileName) return false;
+    const ext = fileName.split('.').pop()?.toLowerCase() || '';
+    const previewableExtensions = [
+      'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico',
+      'pdf',
+      'txt', 'md', 'json', 'csv', 'xml', 'html', 'htm', 'js', 'ts', 'css'
+    ];
+    return previewableExtensions.includes(ext);
+  };
+
+  return (
+    <div className="quote-attachment-uploader">
+      {/* 隐藏的文件选择器，支持多选 multiple */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        style={{ display: 'none' }}
+        multiple
+        onChange={handleFileChange}
+      />
+
+      <Space align="center" style={{ marginBottom: tempAttachments.length > 0 ? 8 : 0 }}>
+        <Button icon={<UploadOutlined />} onClick={handleSelectFilesClick}>
+          添加附件
+        </Button>
+        {tempAttachments.length > 0 && (
+          <>
+            <Tag color="orange" style={{ margin: 0, fontSize: 12 }}>
+              临时暂存，提交后上传
+            </Tag>
+            <Button danger type="text" size="small" onClick={onClearAttachments}>
+              清空暂存 ({tempAttachments.length})
+            </Button>
+          </>
+        )}
+      </Space>
+
+      {/* 暂存文件列表（展示文件名链接，点击可预览/下载预览） */}
+      {tempAttachments.length > 0 && (
+        <List
+          size="small"
+          bordered
+          className="attachment-temp-list"
+          dataSource={tempAttachments}
+          renderItem={(item) => {
+            const canPreview = isPreviewableFile(item.name);
+            return (
+              <List.Item
+                actions={[
+                  canPreview ? (
+                    <Button
+                      key="preview"
+                      type="link"
+                      size="small"
+                      icon={<EyeOutlined />}
+                      href={item.objectUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      预览
+                    </Button>
+                  ) : (
+                    <Button
+                      key="download"
+                      type="link"
+                      size="small"
+                      icon={<EyeOutlined />}
+                      href={item.objectUrl}
+                      download={item.name}
+                    >
+                      下载预览
+                    </Button>
+                  ),
+                  <Button
+                    key="delete"
+                    type="text"
+                    danger
+                    size="small"
+                    icon={<DeleteOutlined />}
+                    onClick={() => onRemoveAttachment(item.id)}
+                  >
+                    移除
+                  </Button>,
+                ]}
+              >
+                <List.Item.Meta
+                  avatar={<FileTextOutlined style={{ fontSize: 18, color: '#1890ff', marginTop: 2 }} />}
+                  title={
+                    canPreview ? (
+                      <a
+                        href={item.objectUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ fontWeight: 500, color: '#1677ff' }}
+                        title="点击在新标签页打开预览"
+                      >
+                        {item.name}
+                      </a>
+                    ) : (
+                      <a
+                        href={item.objectUrl}
+                        download={item.name}
+                        style={{ fontWeight: 500, color: '#1677ff' }}
+                        title="点击下载预览原文件"
+                      >
+                        {item.name}
+                      </a>
+                    )
+                  }
+                  description={
+                    <Space split={<Divider type="vertical" />} style={{ fontSize: 12 }}>
+                      <span>大小: {formatFileSize(item.size)}</span>
+                    </Space>
+                  }
+                />
+              </List.Item>
+            );
+          }}
+        />
+      )}
+    </div>
+  );
+};
 
 // 扩展前端明细结构（继承自后端的骨架，并加入 UI 辅助属性）
 interface FormQuoteItem {
@@ -64,6 +310,28 @@ const CreateQuote: React.FC = () => {
   const [filteredContacts, setFilteredContacts] = useState<CustomerRecord[]>([]);
   const [productSpecsList, setProductSpecsList] = useState<any[]>([]);
   const [isNewCustomer, setIsNewCustomer] = useState(false);
+
+  // --- 附件上传与页内临时暂存状态 ---
+  const [tempAttachments, setTempAttachments] = useState<TempAttachment[]>([]);
+
+  const handleAddTempAttachments = (newItems: TempAttachment[]) => {
+    setTempAttachments((prev) => [...prev, ...newItems]);
+  };
+
+  const handleRemoveTempAttachment = (id: string) => {
+    setTempAttachments((prev) => {
+      const target = prev.find((item) => item.id === id);
+      if (target) {
+        URL.revokeObjectURL(target.objectUrl);
+      }
+      return prev.filter((item) => item.id !== id);
+    });
+  };
+
+  const handleClearTempAttachments = () => {
+    tempAttachments.forEach((item) => URL.revokeObjectURL(item.objectUrl));
+    setTempAttachments([]);
+  };
 
   // ================= 核心双向绑定状态 =================
   // 1. 报价单结构体双向状态 (直接绑定后端返回结构体，并实时更新)
@@ -434,7 +702,28 @@ const CreateQuote: React.FC = () => {
     setSubmitting(true);
 
     try {
-      // 直接打包双向绑定的数据发送给后端
+      // 1. 若有临时暂存的附件，批量/依次上传至腾讯云 COS 存储，拿到相对路径列表
+      const uploadedKeys: string[] = [];
+      if (tempAttachments.length > 0) {
+        for (const item of tempAttachments) {
+          const formData = new FormData();
+          formData.append('file', item.file);
+
+          const uploadRes = await request.post('/cos/upload', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
+
+          if (uploadRes.data && uploadRes.data.data && uploadRes.data.data.key) {
+            uploadedKeys.push(uploadRes.data.data.key);
+          } else {
+            throw new Error(`附件 [${item.name}] 上传失败：响应格式异常`);
+          }
+        }
+      }
+
+      // 2. 直接打包双向绑定的数据发送给后端，将 COS 相对路径列表填入 attachment_path_array
       const payload: SubmitQuotePayload = {
         quote: {
           quote_code: quote.quote_code,
@@ -449,7 +738,11 @@ const CreateQuote: React.FC = () => {
           pay_way: quote.pay_way || '',
           credit_period: quote.credit_period || '',
           remarks: quote.remarks || '',
-          attachment_path_array: Array.isArray(quote.attachment_path_array) ? quote.attachment_path_array : null,
+          attachment_path_array: uploadedKeys.length > 0 
+            ? uploadedKeys 
+            : (Array.isArray(quote.attachment_path_array)
+              ? quote.attachment_path_array
+              : null),
         },
         quote_items: quoteItems.map((item) => ({
           product_category_id: item.product_category_id,
@@ -475,6 +768,9 @@ const CreateQuote: React.FC = () => {
 
       const res = await submitQuoteApi(payload);
       Feedback.handle(res, '报价单保存成功！');
+
+      // 清空本地暂存的临时附件
+      handleClearTempAttachments();
 
       // 提交成功后重新拉取并重置数据
       const initData = await enterCreateQuoteApi();
@@ -845,16 +1141,12 @@ const CreateQuote: React.FC = () => {
 
             <Col xs={24} sm={12} md={12}>
               <Form.Item label="附件" className="custom-form-item">
-                <Upload
-                  beforeUpload={() => false}
-                  multiple
-                  fileList={[]}
-                  onChange={() => {
-                    Feedback.warning('附件上传功能后续实现');
-                  }}
-                >
-                  <Button icon={<UploadOutlined />}>上传附件</Button>
-                </Upload>
+                <QuoteAttachmentUploader
+                  tempAttachments={tempAttachments}
+                  onAddAttachments={handleAddTempAttachments}
+                  onRemoveAttachment={handleRemoveTempAttachment}
+                  onClearAttachments={handleClearTempAttachments}
+                />
               </Form.Item>
             </Col>
           </Row>

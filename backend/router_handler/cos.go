@@ -14,17 +14,17 @@ import (
 	"github.com/tencentyun/cos-go-sdk-v5"
 )
 
-// RegisterTestCOSRoutes 注册 COS 测试专用路由（独立写在此文件，测试完直接删除本文件及路由注册函数即可）
-func RegisterTestCOSRoutes(r *gin.Engine) {
-	h := &TestCOSHandler{}
-	api := r.Group("/api/test/cos")
+// RegisterCOSRoutes 注册 COS 附件对象存储处理路由
+func RegisterCOSRoutes(r *gin.Engine) {
+	h := &COSHandler{}
+	api := r.Group("/api/cos")
 	{
 		api.POST("/upload", h.UploadFile)
 		api.GET("/download", h.DownloadFile)
 	}
 }
 
-type TestCOSHandler struct{}
+type COSHandler struct{}
 
 func getCOSClient() (*cos.Client, error) {
 	bucketURL := "https://csun-server-1444192538.cos.ap-chengdu.myqcloud.com"
@@ -48,7 +48,7 @@ func getCOSClient() (*cos.Client, error) {
 }
 
 // UploadFile 处理上传本地文件到腾讯云 COS 对象存储
-func (h *TestCOSHandler) UploadFile(c *gin.Context) {
+func (h *COSHandler) UploadFile(c *gin.Context) {
 	fileHeader, err := c.FormFile("file")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "未接收到有效文件: " + err.Error()})
@@ -77,7 +77,7 @@ func (h *TestCOSHandler) UploadFile(c *gin.Context) {
 
 	// 生成 COS 存储相对路径 key
 	timestamp := time.Now().Format("20060102_150405")
-	key := fmt.Sprintf("test_uploads/%s_%s", timestamp, filepath.Base(fileHeader.Filename))
+	key := fmt.Sprintf("quote_attachments/%s_%s", timestamp, filepath.Base(fileHeader.Filename))
 
 	opt := &cos.ObjectPutOptions{
 		ObjectPutHeaderOptions: &cos.ObjectPutHeaderOptions{
@@ -97,13 +97,13 @@ func (h *TestCOSHandler) UploadFile(c *gin.Context) {
 			"key":          key,
 			"filename":     fileHeader.Filename,
 			"size":         fileHeader.Size,
-			"download_url": fmt.Sprintf("/api/test/cos/download?key=%s", url.QueryEscape(key)),
+			"download_url": fmt.Sprintf("/api/cos/download?key=%s", url.QueryEscape(key)),
 		},
 	})
 }
 
 // DownloadFile 从 COS 对象存储读取文件并推送到客户端下载
-func (h *TestCOSHandler) DownloadFile(c *gin.Context) {
+func (h *COSHandler) DownloadFile(c *gin.Context) {
 	key := c.Query("key")
 	if key == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "缺少必需的 key 参数"})
