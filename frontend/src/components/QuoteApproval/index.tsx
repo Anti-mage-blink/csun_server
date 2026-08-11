@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { 
   Table, 
   Tag, 
@@ -12,7 +12,8 @@ import {
   Steps, 
   Divider, 
   Typography,
-  Popconfirm
+  Popconfirm,
+  Modal
 } from 'antd'
 import { 
   ArrowLeftOutlined, 
@@ -27,6 +28,7 @@ import {
 import dayjs from 'dayjs'
 import { QuoteProcess, QuoteProcessNode, Quote, QuoteItem } from '@/api/quote'
 import { parseFilenameFromPath, downloadCosFile } from '@/utils/file'
+import companyLogo from './公司logo.png'
 import './index.css'
 
 const { TextArea } = Input
@@ -90,6 +92,20 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
   const [approveComment, setApproveComment] = useState<string>('')
   const [submitting, setSubmitting] = useState<boolean>(false)
   const [withdrawing, setWithdrawing] = useState<boolean>(false)
+
+  // 报价单打印预览 Modal 状态
+  const [printModalVisible, setPrintModalVisible] = useState<boolean>(false)
+
+  useEffect(() => {
+    if (printModalVisible) {
+      document.body.classList.add('modal-print-active')
+    } else {
+      document.body.classList.remove('modal-print-active')
+    }
+    return () => {
+      document.body.classList.remove('modal-print-active')
+    }
+  }, [printModalVisible])
 
   // --------------------------------------------------------
   // 数据过滤与逻辑关联
@@ -487,6 +503,15 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
     // 当前我的审批节点（仅在审批模式下起作用）
     const myCurrentPendingNode = mode === 'approve' ? getProcessCurrentNode(selectedProcess) : undefined
 
+    // 判断是否满足“打印报价单”按钮显示条件：仅在我的申请 mode，且 present_status 为“已通过”或“已同意”
+    const processStatus = currentProcess.present_status || ''
+    const canPrintQuoteSheet = mode === 'my-submit' && (processStatus === '已通过' || processStatus === '已同意')
+
+    // 格式化日期：quote_process.updated_at 转化为 YYYY-MM-DD
+    const rawDate = currentProcess.updated_at || currentProcess.created_at || quote?.quote_date
+    const formattedDate = rawDate ? dayjs(rawDate).format('YYYY-MM-DD') : ''
+    const formattedChineseDate = rawDate ? dayjs(rawDate).format('YYYY年M月D日') : ''
+
     // 渲染审批单状态 Tag（待审批: 黄色 / 已通过: 绿色 / 已拒绝: 红色 / 已撤回: 灰色）
     const renderProcessStatusTag = (status?: string | null) => {
       const statusVal = status || '待审批'
@@ -614,6 +639,15 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
                   撤回
                 </Button>
               </Popconfirm>
+            )}
+            {canPrintQuoteSheet && (
+              <Button 
+                type="primary" 
+                icon={<PrinterOutlined />} 
+                onClick={() => setPrintModalVisible(true)}
+              >
+                打印报价单
+              </Button>
             )}
             <Button 
               type="primary" 
@@ -827,6 +861,156 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
             </Card>
           </div>
         </div>
+
+        {/* 报价单格式打印预览 Modal */}
+        <Modal
+          title="报价单预览"
+          open={printModalVisible}
+          onCancel={() => setPrintModalVisible(false)}
+          width={850}
+          centered
+          destroyOnClose
+          footer={[
+            <Button key="cancel" onClick={() => setPrintModalVisible(false)}>
+              取消
+            </Button>,
+            <Button 
+              key="print" 
+              type="primary" 
+              icon={<PrinterOutlined />} 
+              onClick={() => window.print()}
+            >
+              打印
+            </Button>
+          ]}
+          className="quote-print-preview-modal"
+        >
+          <div className="quote-print-sheet">
+            {/* 页头：Logo & 标语 */}
+            <div className="quote-sheet-header">
+              <div className="logo-container">
+                <img src={companyLogo} alt="公司Logo" className="company-logo-img" />
+                <div className="slogan-box">
+                  <div className="slogan-cn">使全球交通更安全、更节能</div>
+                  <div className="slogan-en">MAKING GLOBAL-TRAFFIC MORE SAFER AND ENERGY-EFFICIENT</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="quote-sheet-divider" />
+
+            {/* 基本信息网格 */}
+            <div className="quote-sheet-info-grid">
+              <div className="info-row">
+                <div className="info-cell">
+                  <span className="info-label">收件单位：</span>
+                  <span className="info-value underline">{quote?.customer_name || ''}</span>
+                </div>
+                <div className="info-cell">
+                  <span className="info-label">发件人：</span>
+                  <span className="info-value underline">{quote?.creator_name || currentProcess.creator_name || ''}</span>
+                </div>
+              </div>
+
+              <div className="info-row">
+                <div className="info-cell">
+                  <span className="info-label">收件人：</span>
+                  <span className="info-value underline">{quote?.contact_name || ''}</span>
+                </div>
+                <div className="info-cell">
+                  <span className="info-label">页数：</span>
+                  <span className="info-value underline">1页</span>
+                </div>
+              </div>
+
+              <div className="info-row">
+                <div className="info-cell">
+                  <span className="info-label">传真：</span>
+                  <span className="info-value underline"></span>
+                </div>
+                <div className="info-cell">
+                  <span className="info-label">日期：</span>
+                  <span className="info-value underline">{formattedDate}</span>
+                </div>
+              </div>
+
+              <div className="info-row">
+                <div className="info-cell">
+                  <span className="info-label">电话：</span>
+                  <span className="info-value underline"></span>
+                </div>
+                <div className="info-cell">
+                  <span className="info-label">抄送：</span>
+                  <span className="info-value underline"></span>
+                </div>
+              </div>
+
+              <div className="info-row">
+                <div className="info-cell">
+                  <span className="info-label">关于：</span>
+                  <span className="info-value underline">产品报价</span>
+                </div>
+                <div className="info-cell">
+                  <span className="info-label">签发：</span>
+                  <span className="info-value underline"></span>
+                </div>
+              </div>
+            </div>
+
+            <div className="quote-sheet-divider" />
+
+            {/* 产品名称、型号、数量、金额 */}
+            <div className="quote-sheet-table-title">
+              产品名称、型号、数量、金额：
+            </div>
+
+            {/* 报价明细表格 */}
+            <table className="quote-sheet-table">
+              <thead>
+                <tr>
+                  <th style={{ width: '50px' }}>序号</th>
+                  <th>产品名称</th>
+                  <th>规格型号</th>
+                  <th style={{ width: '60px' }}>单位</th>
+                  <th style={{ width: '60px' }}>数量</th>
+                  <th>含税单价（元/件）</th>
+                  <th>含税总价（元）</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((item, idx) => (
+                  <tr key={item.id || idx}>
+                    <td>{idx + 1}</td>
+                    <td>{item.product_name || ''}</td>
+                    <td>{item.product_spec || ''}</td>
+                    <td>件</td>
+                    <td>{item.quantity ?? ''}</td>
+                    <td>{item.quote_unit_price !== undefined && item.quote_unit_price !== null ? item.quote_unit_price : ''}</td>
+                    <td>{item.total_amount !== undefined && item.total_amount !== null ? item.total_amount : ''}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* 备注 */}
+            <div className="quote-sheet-remarks">
+              <div className="remarks-row">
+                <span className="remarks-label">备注：</span>
+                <div className="remarks-list">
+                  <div>1、本次报价为含税价（税率 13%）</div>
+                  <div>2、付款方式：{quote?.pay_way || ''}</div>
+                  <div>3、报价有效期：{quote?.valid_days ? `${quote.valid_days} 天` : ''}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* 右下角落款 */}
+            <div className="quote-sheet-footer">
+              <div className="company-name">湖南世鑫新材料有限公司</div>
+              <div className="footer-date">{formattedChineseDate}</div>
+            </div>
+          </div>
+        </Modal>
       </div>
     )
   }

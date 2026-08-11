@@ -386,3 +386,229 @@
     width: 100%;
   }
 }
+
+/* ==========================================================================
+   报价单按格式打印 Preview Modal 专属样式
+   ========================================================================== */
+
+.quote-print-preview-modal .ant-modal-body {
+  padding: 32px;
+  background: #fff;
+}
+
+.quote-print-sheet {
+  background: #fff;
+  color: #000;
+  font-family: "SimSun", "Songti SC", "Microsoft YaHei", sans-serif;
+  padding: 32px 36px;
+  box-sizing: border-box;
+}
+
+.quote-sheet-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.company-logo-img {
+  height: 60px;
+  object-fit: contain;
+}
+
+.slogan-box {
+  display: flex;
+  flex-direction: column;
+}
+
+.slogan-cn {
+  font-size: 19px;
+  font-weight: bold;
+  color: #0d2870;
+  letter-spacing: 1px;
+  line-height: 1.25;
+}
+
+.slogan-en {
+  font-size: 10.5px;
+  color: #0d2870;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.quote-sheet-divider {
+  border-bottom: 2px solid #000;
+  margin: 16px 0 24px 0;
+}
+
+.quote-sheet-info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 60px;
+}
+
+.info-cell {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  font-size: 14px;
+  font-weight: bold;
+  line-height: 1.6;
+}
+
+.info-label {
+  width: 80px;
+  white-space: nowrap;
+}
+
+.info-value {
+  flex: 1;
+  font-weight: normal;
+  min-height: 28px;
+}
+
+.info-value.underline {
+  border-bottom: 1px solid #000;
+  padding-left: 6px;
+}
+
+.quote-sheet-table-title {
+  font-size: 15px;
+  font-weight: bold;
+  margin: 30px 0 16px 0;
+}
+
+.quote-sheet-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 28px;
+  font-size: 13.5px;
+}
+
+.quote-sheet-table th,
+.quote-sheet-table td {
+  border: 1px solid #000;
+  padding: 14px 10px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.quote-sheet-table th {
+  font-weight: bold;
+  background-color: #fff;
+}
+
+.quote-sheet-remarks {
+  font-size: 14px;
+  line-height: 2.2;
+  margin-top: 28px;
+  font-weight: 500;
+}
+
+.remarks-row {
+  display: flex;
+  align-items: flex-start;
+}
+
+.remarks-label {
+  white-space: nowrap;
+}
+
+.remarks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quote-sheet-footer {
+  margin-top: 70px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 15px;
+  font-weight: bold;
+  gap: 12px;
+}
+
+.company-name {
+  font-size: 16px;
+}
+
+/* 打印 modal 打开时的专属打印规则 */
+@media print {
+  /* 强制在打印 Modal 打开时将页面和所有容器元素的背景置为纯白色，彻底消除打印底部的灰色背景 */
+  html,
+  body,
+  body.modal-print-active,
+  body.modal-print-active *,
+  body.modal-print-active .ant-modal-root,
+  body.modal-print-active .ant-modal-wrap,
+  body.modal-print-active .ant-modal,
+  body.modal-print-active .ant-modal-content,
+  body.modal-print-active .ant-modal-body {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    filter: none !important;
+  }
+
+  body.modal-print-active .approve-container,
+  body.modal-print-active .no-print,
+  body.modal-print-active .ant-layout-sider,
+  body.modal-print-active .ant-layout-header {
+    display: none !important;
+  }
+
+  body.modal-print-active .quote-print-preview-modal {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+
+  body.modal-print-active .quote-print-preview-modal .ant-modal-mask,
+  body.modal-print-active .quote-print-preview-modal .ant-modal-header,
+  body.modal-print-active .quote-print-preview-modal .ant-modal-footer,
+  body.modal-print-active .quote-print-preview-modal .ant-modal-close {
+    display: none !important;
+  }
+
+  body.modal-print-active .quote-print-preview-modal .ant-modal-wrap,
+  body.modal-print-active .quote-print-preview-modal .ant-modal,
+  body.modal-print-active .quote-print-preview-modal .ant-modal-content,
+  body.modal-print-active .quote-print-preview-modal .ant-modal-body {
+    position: static !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  body.modal-print-active .quote-print-sheet {
+    padding: 0 !important;
+    width: 100% !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+  }
+}
