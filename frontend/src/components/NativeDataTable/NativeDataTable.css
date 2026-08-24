@@ -234,6 +234,16 @@
   font-size: 12px;
 }
 
+@media (max-width: 768px) {
+  .native-data-table-wrapper {
+    padding: 12px;
+  }
+
+  .native-data-table-search-input {
+    width: 100% !important;
+  }
+}
+
 /* 自定义的软滑条滚动样式 */
 .native-data-table-wrapper .ant-table-body::-webkit-scrollbar,
 .native-data-table-wrapper .ant-table-content::-webkit-scrollbar {

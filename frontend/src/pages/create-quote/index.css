@@ -93,3 +93,14 @@
   padding: 8px 12px;
 }
 
+@media (max-width: 768px) {
+  .create-quote-container {
+    padding: 12px;
+  }
+
+  .create-quote-card,
+  .detail-table-card {
+    padding: 16px;
+  }
+}
+

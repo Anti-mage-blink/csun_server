@@ -387,6 +387,51 @@
   }
 }
 
+@media (max-width: 768px) {
+  .approve-container {
+    padding: 12px !important;
+  }
+
+  .header-bar {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  .back-bar {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  .back-bar-actions {
+    margin-left: 0 !important;
+    width: 100% !important;
+    justify-content: flex-end !important;
+  }
+
+  .detail-layout {
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  .detail-left,
+  .detail-right-steps {
+    flex: none !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .quote-print-sheet {
+    padding: 16px !important;
+    overflow-x: auto !important;
+  }
+
+  .info-row {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+}
+
 /* ==========================================================================
    报价单按格式打印 Preview Modal 专属样式
    ========================================================================== */

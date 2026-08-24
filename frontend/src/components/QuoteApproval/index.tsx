@@ -667,7 +667,7 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
           {/* 左侧：报价及审批详情 */}
           <div className="detail-left">
             <Card title="报价单基本信息" className="mb-16 card-shadow">
-              <Descriptions bordered column={2} size="small">
+              <Descriptions bordered column={{ xs: 1, sm: 2, md: 2 }} size="small">
                 <Descriptions.Item label="报价单编号">
                   <span className="highlight-code">{quote?.quote_code}</span>
                 </Descriptions.Item>
@@ -871,7 +871,8 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
           title="报价单预览"
           open={printModalVisible}
           onCancel={() => setPrintModalVisible(false)}
-          width={850}
+          width="92%"
+          style={{ maxWidth: 850, top: 16 }}
           centered
           destroyOnClose
           footer={[

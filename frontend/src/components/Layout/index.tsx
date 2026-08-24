@@ -1,7 +1,7 @@
 import { type ReactNode, useState } from 'react'
-import { Layout, Menu, Button, Popconfirm, Space } from 'antd'
+import { Layout, Menu, Button, Popconfirm, Space, Drawer } from 'antd'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { LogoutOutlined, UserOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons'
+import { LogoutOutlined, UserOutlined, LeftOutlined, RightOutlined, MenuOutlined } from '@ant-design/icons'
 import { useAuth } from '@/AuthContext'
 import { getMenuItemsByRole } from '@/roleMenuConfig'
 import styles from './index.module.css'
@@ -21,6 +21,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   const location = useLocation()
   const { user, logout, pendingCount } = useAuth()
   const [collapsed, setCollapsed] = useState(false)
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
 
   // 读取当前登录用户，根据角色功能映射给出功能子页面（顺序符合映射列表顺序）
   const baseMenuItems = getMenuItemsByRole(user?.role)
@@ -51,13 +52,14 @@ const AppLayout = ({ children }: AppLayoutProps) => {
 
   return (
     <Layout className={styles.layout}>
+      {/* PC 端侧边栏 */}
       <Sider
         collapsible
         collapsed={collapsed}
         trigger={null}
         collapsedWidth={0}
         width={200}
-        className={`no-print ${styles.sider}`}
+        className={`no-print ${styles.sider} ${styles.desktopSider}`}
       >
         <div className={styles.logo}>报价管理系统</div>
         <Menu
@@ -69,9 +71,32 @@ const AppLayout = ({ children }: AppLayoutProps) => {
         />
       </Sider>
 
-      {/* 收起/展开圆形按钮 */}
+      {/* 移动端 Drawer 抽屉 */}
+      <Drawer
+        placement="left"
+        onClose={() => setMobileDrawerOpen(false)}
+        open={mobileDrawerOpen}
+        width={220}
+        styles={{ body: { padding: 0, backgroundColor: '#2e5b88' } }}
+        headerStyle={{ display: 'none' }}
+        className={styles.mobileDrawer}
+      >
+        <div className={styles.logo}>报价管理系统</div>
+        <Menu
+          theme="dark"
+          mode="inline"
+          selectedKeys={[location.pathname]}
+          items={menuItems}
+          onClick={({ key }) => {
+            navigate(key)
+            setMobileDrawerOpen(false)
+          }}
+        />
+      </Drawer>
+
+      {/* PC 端收起/展开圆形按钮 */}
       <div
-        className={`${styles.trigger} no-print`}
+        className={`${styles.trigger} ${styles.desktopTrigger} no-print`}
         style={{ left: collapsed ? '12px' : '200px' }}
         onClick={() => setCollapsed(!collapsed)}
         title={collapsed ? '展开侧边栏' : '收起侧边栏'}
@@ -81,12 +106,21 @@ const AppLayout = ({ children }: AppLayoutProps) => {
 
       <Layout>
         <Header className={`${styles.header} no-print`}>
+          {/* 移动端汉堡包菜单按钮 */}
+          <Button
+            type="text"
+            icon={<MenuOutlined style={{ fontSize: 18, color: '#1677ff' }} />}
+            className={styles.mobileMenuBtn}
+            onClick={() => setMobileDrawerOpen(true)}
+          />
+
           {user && (
             <div className={styles.userInfo}>
               <Space className={styles.userText}>
                 <UserOutlined />
                 <span>
-                  欢迎您，<span className={styles.username}>{user.name}</span>
+                  <span className={styles.welcomeText}>欢迎您，</span>
+                  <span className={styles.username}>{user.name}</span>
                 </span>
                 <span className={styles.roleTag}>{user.role}</span>
               </Space>
@@ -104,7 +138,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
                   icon={<LogoutOutlined />} 
                   className={styles.logoutBtn}
                 >
-                  退出登录
+                  <span className={styles.logoutText}>退出登录</span>
                 </Button>
               </Popconfirm>
             </div>

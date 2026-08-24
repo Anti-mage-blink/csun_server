@@ -136,3 +136,42 @@
   min-height: calc(100vh - 64px);
 }
 
+.mobileMenuBtn {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .desktopSider,
+  .desktopTrigger {
+    display: none !important;
+  }
+
+  .mobileMenuBtn {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    margin-right: auto;
+    padding: 0 8px;
+  }
+
+  .header {
+    padding: 0 12px !important;
+  }
+
+  .userInfo {
+    gap: 8px !important;
+  }
+
+  .welcomeText {
+    display: none !important;
+  }
+
+  .roleTag {
+    display: none !important;
+  }
+
+  .logoutText {
+    display: none;
+  }
+}
+
