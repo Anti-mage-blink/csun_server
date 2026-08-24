@@ -118,26 +118,7 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
 
   // 2. 获取该流程对应的当前审批/进行节点
   const getProcessCurrentNode = (process: QuoteProcess): QuoteProcessNode | undefined => {
-    if (mode === 'approve' && currentUserId) {
-      // 待我审批模式下，优先关联当前用户的“待审批”节点
-      const userPendingNode = quoteProcessNodes.find(n => 
-        n.process_id === process.id && 
-        n.approver_id === currentUserId && 
-        n.status === '待审批'
-      )
-      if (userPendingNode) return userPendingNode
-
-      // 若当前用户没有“待审批”节点，关联当前用户属于该流程的节点
-      const userNodes = quoteProcessNodes.filter(n =>
-        n.process_id === process.id &&
-        n.approver_id === currentUserId
-      )
-      if (userNodes.length > 0) {
-        return [...userNodes].sort((a, b) => b.id - a.id)[0]
-      }
-    }
-    
-    // 其它模式下，寻找该流程下任意一个状态为 "待审批" 的节点
+    // 优先寻找该流程下状态为 "待审批" 的节点
     const pendingNode = quoteProcessNodes.find(n => n.process_id === process.id && n.status === '待审批')
     if (pendingNode) return pendingNode
     
@@ -231,9 +212,13 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
   // --------------------------------------------------------
   const handleApproveAction = async (status: '已通过' | '已拒绝') => {
     if (!selectedProcess) return
-    const currentNode = getProcessCurrentNode(selectedProcess)
-    if (!currentNode) {
-      message.error('无法确定当前审批节点，操作失败')
+    
+    const processNodes = quoteProcessNodes.filter(n => n.process_id === selectedProcess.id)
+    const isProcessPending = (selectedProcess.present_status || '待审批') === '待审批'
+    const pendingNode = processNodes.find(n => n.status === '待审批')
+
+    if (!isProcessPending || !pendingNode || (currentUserId !== undefined && pendingNode.approver_id !== currentUserId)) {
+      message.error('当前流程非待您审批状态，无法操作')
       return
     }
 
@@ -244,7 +229,7 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
 
     setSubmitting(true)
     try {
-      await onApprove(selectedProcess, currentNode, status, approveComment)
+      await onApprove(selectedProcess, pendingNode, status, approveComment)
       
       // 审批成功后返回列表并清空输入
       setView('list')
@@ -274,7 +259,7 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
   // 页面一：渲染审批页面（列表总览）
   // --------------------------------------------------------
   const renderListView = () => {
-    const mapProcessToRow = (process: QuoteProcess) => {
+    const mapProcessToRow = (process: QuoteProcess, isPendingSection: boolean = true) => {
       const quote = getProcessQuote(process)
       const currentNode = getProcessCurrentNode(process)
       const rawQuoteDate = quote?.quote_date || '';
@@ -290,6 +275,7 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
         process,
         quote,
         currentNode,
+        isPendingSection,
         quote_code: quote?.quote_code || '未知编号',
         customer_name: quote?.customer_name || '未知客户',
         creator_name: quote?.creator_name || process.creator_name || '未知经办人',
@@ -361,18 +347,24 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
         title: '操作',
         key: 'action',
         align: 'center',
-        render: (_: any, record: any) => (
-          <Button 
-            type="primary" 
-            size="small" 
-            onClick={() => {
-              setSelectedProcess(record.process)
-              setView('detail')
-            }}
-          >
-            {mode === 'approve' ? '去审批' : '查看详情'}
-          </Button>
-        )
+        render: (_: any, record: any) => {
+          let btnText = '查看详情'
+          if (mode === 'approve') {
+            btnText = record.isPendingSection ? '去审批' : '查看详情'
+          }
+          return (
+            <Button 
+              type="primary" 
+              size="small" 
+              onClick={() => {
+                setSelectedProcess(record.process)
+                setView('detail')
+              }}
+            >
+              {btnText}
+            </Button>
+          )
+        }
       }
     ]
 
@@ -397,8 +389,8 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
       const pendingProcesses = filteredProcesses.filter(p => isUserPendingProcess(p))
       const approvedProcesses = filteredProcesses.filter(p => !isUserPendingProcess(p))
 
-      const pendingDataSource = pendingProcesses.map(mapProcessToRow)
-      const approvedDataSource = approvedProcesses.map(mapProcessToRow)
+      const pendingDataSource = pendingProcesses.map(p => mapProcessToRow(p, true))
+      const approvedDataSource = approvedProcesses.map(p => mapProcessToRow(p, false))
 
       return (
         <div className="need-approve-view">
@@ -443,7 +435,7 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
       )
     }
 
-    const listDataSource = filteredProcesses.map(mapProcessToRow)
+    const listDataSource = filteredProcesses.map(p => mapProcessToRow(p, false))
 
     return (
       <div className="need-approve-view">
@@ -500,8 +492,20 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
     // 确定 Steps 步骤条当前所在的位置
     const currentStepIndex = nodes.findIndex(node => node.status === '待审批')
     
-    // 当前我的审批节点（仅在审批模式下起作用）
-    const myCurrentPendingNode = mode === 'approve' ? getProcessCurrentNode(selectedProcess) : undefined
+    // 判断流程是否处于待审批状态
+    const isProcessPending = (currentProcess.present_status || '待审批') === '待审批'
+    
+    // 找到该流程中处于“待审批”状态的节点
+    const currentPendingNode = nodes.find(node => node.status === '待审批')
+
+    // 当前我的审批节点（仅在 mode === 'approve'、流程处于待审批状态、且当前待审批节点的审批人是当前登录用户时才成立）
+    const myCurrentPendingNode = (
+      mode === 'approve' && 
+      isProcessPending && 
+      currentPendingNode && 
+      currentUserId !== undefined && 
+      currentPendingNode.approver_id === currentUserId
+    ) ? currentPendingNode : undefined
 
     // 判断是否满足“打印报价单”按钮显示条件：仅在我的发起 mode，且 present_status 为“已通过”或“已同意”
     const processStatus = currentProcess.present_status || ''
