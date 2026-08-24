@@ -27,7 +27,7 @@ func RegisterCreateQuoteRoutes(r *gin.Engine, createQuoteHandler *CreateQuoteHan
 	}
 }
 
-// PrepareCreateQuote 获取新建报价单所需的编号及全量基础数据
+// PrepareCreateQuote 获取发起报价单所需的编号及全量基础数据
 func (h *CreateQuoteHandler) PrepareCreateQuote(c *gin.Context) {
 	data, err := h.createQuoteService.PrepareCreateQuote(c.Request.Context())
 	if err != nil {
@@ -36,7 +36,7 @@ func (h *CreateQuoteHandler) PrepareCreateQuote(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "获取新建报价单数据成功",
+		"message": "获取发起报价单数据成功",
 		"data":    data,
 	})
 }

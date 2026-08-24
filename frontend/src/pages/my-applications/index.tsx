@@ -30,7 +30,7 @@ const MyApplications: React.FC = () => {
       
       // 使用 Feedback.handle 对成功获取进行可能的提示（可选，因为通常只提示错误或保存成功，但这里可遵循用户指定“调用返回传递给FeedBack组件”）
       // 这里我们在出错时进行提示，查询成功若有特定后端返回消息也可以自动用 Feedback 过滤
-      Feedback.handle(res, undefined, '获取我的申请数据失败')
+      Feedback.handle(res, undefined, '获取我的发起数据失败')
       
       setData({
         quotes: res.data.quotes,
@@ -40,7 +40,7 @@ const MyApplications: React.FC = () => {
       })
     } catch (err: any) {
       if (!active) return
-      Feedback.handle(err, undefined, '获取我的申请数据失败')
+      Feedback.handle(err, undefined, '获取我的发起数据失败')
     } finally {
       if (active) setLoading(false)
     }
@@ -76,7 +76,7 @@ const MyApplications: React.FC = () => {
     <div className="my-applications-page-wrapper">
       {loading && data.quotes.length === 0 ? (
         <div className="my-applications-loading-container">
-          <Spin size="large" tip="正在加载我的申请数据，请稍候..." />
+          <Spin size="large" tip="正在加载我的发起数据，请稍候..." />
         </div>
       ) : (
         <QuoteApproval

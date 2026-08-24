@@ -8,7 +8,7 @@ import (
 	"csun_server-backend/dao/model/quote_manage"
 )
 
-// MockMyApplyQueryRepository 我的申请查询仓储的 Mock 实现
+// MockMyApplyQueryRepository 我的发起查询仓储的 Mock 实现
 type MockMyApplyQueryRepository struct {
 	GetQuotesByCreatorIDFn    func(ctx context.Context, creatorID int32) ([]*quote_manage.Quote, error)
 	GetQuoteItemsByQuoteIDsFn func(ctx context.Context, quoteIDs []int32) ([]*quote_manage.AQuoteItem, error)
@@ -32,7 +32,7 @@ func (m *MockMyApplyQueryRepository) GetNodesByProcessIDs(ctx context.Context, p
 	return m.GetNodesByProcessIDsFn(ctx, processIDs)
 }
 
-// TestMyApplyQuery_Success 测试成功获取我的申请数据
+// TestMyApplyQuery_Success 测试成功获取我的发起数据
 func TestMyApplyQuery_Success(t *testing.T) {
 	mockQuotes := []*quote_manage.Quote{{ID: 10}}
 	mockItems := []*quote_manage.AQuoteItem{{ID: 20, QuoteID: func() *int32 { id := int32(10); return &id }()}}
@@ -86,7 +86,7 @@ func TestMyApplyQuery_Success(t *testing.T) {
 	}
 }
 
-// TestMyApplyQuery_NoQuotes 测试无报价单（我的申请为空）的情况
+// TestMyApplyQuery_NoQuotes 测试无报价单（我的发起为空）的情况
 func TestMyApplyQuery_NoQuotes(t *testing.T) {
 	mock := &MockMyApplyQueryRepository{
 		GetQuotesByCreatorIDFn: func(ctx context.Context, creatorID int32) ([]*quote_manage.Quote, error) {

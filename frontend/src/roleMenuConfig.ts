@@ -5,9 +5,9 @@ export type MenuItemConfig = NonNullable<MenuProps['items']>[number]
 
 // 所有功能子页面的元数据配置
 export const MENU_ITEM_MAP: Record<string, MenuItemConfig> = {
-  '/create-quote': { key: '/create-quote', label: '新建报价单' },
+  '/create-quote': { key: '/create-quote', label: '发起报价单' },
   '/filing': { key: '/filing', label: '备案查看' },
-  '/my-applications': { key: '/my-applications', label: '我的申请' },
+  '/my-applications': { key: '/my-applications', label: '我的发起' },
   '/my-approvals': { key: '/my-approvals', label: '我的审批' },
   '/product-manage': { key: '/product-manage', label: '产品管理' },
   '/test-page': { key: '/test-page', label: '测试页面' },

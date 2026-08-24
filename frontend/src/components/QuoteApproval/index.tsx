@@ -210,7 +210,7 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
         // 备案查看 mode：默认排序先按报价日期（quote.quote_date）降序、对于报价日期相同再按更新时间（quote_process.updated_at）降序
         return compareByDateAndUpdated(a, b)
       } else {
-        // 我的申请 (my-submit) 和 我的审批 (approve) mode：
+        // 我的发起 (my-submit) 和 我的审批 (approve) mode：
         // 先分为“待审批”（quote_process.present_status）部分和其余部分（待审批部分在其余部分之前）
         const isPendingA = (a.present_status || '待审批') === '待审批'
         const isPendingB = (b.present_status || '待审批') === '待审批'
@@ -503,7 +503,7 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
     // 当前我的审批节点（仅在审批模式下起作用）
     const myCurrentPendingNode = mode === 'approve' ? getProcessCurrentNode(selectedProcess) : undefined
 
-    // 判断是否满足“打印报价单”按钮显示条件：仅在我的申请 mode，且 present_status 为“已通过”或“已同意”
+    // 判断是否满足“打印报价单”按钮显示条件：仅在我的发起 mode，且 present_status 为“已通过”或“已同意”
     const processStatus = currentProcess.present_status || ''
     const canPrintQuoteSheet = mode === 'my-submit' && (processStatus === '已通过' || processStatus === '已同意')
 

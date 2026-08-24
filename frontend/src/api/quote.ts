@@ -37,7 +37,7 @@ export interface PrepareCreateQuoteResponse {
 }
 
 /**
- * 进入新建报价单页面，获取报价单编号、客户列表及相关全量基础数据
+ * 进入发起报价单页面，获取报价单编号、客户列表及相关全量基础数据
  */
 export const enterCreateQuoteApi = async (): Promise<PrepareCreateQuoteResponse> => {
   try {
@@ -45,9 +45,9 @@ export const enterCreateQuoteApi = async (): Promise<PrepareCreateQuoteResponse>
     return res.data;
   } catch (error: any) {
     if (error.response && error.response.data) {
-      throw new Error(error.response.data.message || '获取新建报价单数据失败');
+      throw new Error(error.response.data.message || '获取发起报价单数据失败');
     }
-    throw new Error(error.message || '连接服务器失败，获取新建报价单数据失败');
+    throw new Error(error.message || '连接服务器失败，获取发起报价单数据失败');
   }
 };
 
@@ -90,7 +90,7 @@ export interface SubmitQuotePayload {
 }
 
 /**
- * 提交新建报价单
+ * 提交发起报价单
  */
 export const submitQuoteApi = async (payload: SubmitQuotePayload): Promise<{ message: string }> => {
   try {
@@ -218,7 +218,7 @@ export interface MyApplyQueryResponse {
 }
 
 /**
- * 查询我的申请数据
+ * 查询我的发起数据
  */
 export const myApplyQueryApi = async (userId: number): Promise<MyApplyQueryResponse> => {
   try {
@@ -228,9 +228,9 @@ export const myApplyQueryApi = async (userId: number): Promise<MyApplyQueryRespo
     return res.data;
   } catch (error: any) {
     if (error.response && error.response.data) {
-      throw new Error(error.response.data.message || '查询我的申请数据失败');
+      throw new Error(error.response.data.message || '查询我的发起数据失败');
     }
-    throw new Error(error.message || '连接服务器失败，查询我的申请数据失败');
+    throw new Error(error.message || '连接服务器失败，查询我的发起数据失败');
   }
 };
 

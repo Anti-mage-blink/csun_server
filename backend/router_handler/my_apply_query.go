@@ -9,17 +9,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// MyApplyQueryHandler 我的申请查询的 Handler
+// MyApplyQueryHandler 我的发起查询的 Handler
 type MyApplyQueryHandler struct {
 	service service_repository.MyApplyQueryService
 }
 
-// NewMyApplyQueryHandler 创建一个我的申请查询 Handler 实例
+// NewMyApplyQueryHandler 创建一个我的发起查询 Handler 实例
 func NewMyApplyQueryHandler(service service_repository.MyApplyQueryService) *MyApplyQueryHandler {
 	return &MyApplyQueryHandler{service: service}
 }
 
-// RegisterMyApplyQueryRoutes 注册我的申请查询相关的路由
+// RegisterMyApplyQueryRoutes 注册我的发起查询相关的路由
 func RegisterMyApplyQueryRoutes(r *gin.Engine, h *MyApplyQueryHandler) {
 	api := r.Group("/api")
 	{
@@ -27,7 +27,7 @@ func RegisterMyApplyQueryRoutes(r *gin.Engine, h *MyApplyQueryHandler) {
 	}
 }
 
-// MyApplyQuery 处理我的申请查询接口请求
+// MyApplyQuery 处理我的发起查询接口请求
 func (h *MyApplyQueryHandler) MyApplyQuery(c *gin.Context) {
 	// 支持兼容多种入参名称：user_id, userId, id
 	userIDStr := c.Query("user_id")
@@ -51,12 +51,12 @@ func (h *MyApplyQueryHandler) MyApplyQuery(c *gin.Context) {
 
 	data, err := h.service.MyApplyQuery(c.Request.Context(), int32(userID))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "查询我的申请数据失败: " + err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "查询我的发起数据失败: " + err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "查询我的申请数据成功",
+		"message": "查询我的发起数据成功",
 		"data":    data,
 	})
 }

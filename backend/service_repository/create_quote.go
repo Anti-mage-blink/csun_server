@@ -16,7 +16,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// CreateQuoteData 新建报价单返回给前端的全量数据
+// CreateQuoteData 发起报价单返回给前端的全量数据
 type CreateQuoteData struct {
 	Quote        *quote_manage.Quote         `json:"quote"`
 	QuoteItem    *quote_manage.AQuoteItem    `json:"quote_item"`

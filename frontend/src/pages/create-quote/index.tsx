@@ -1007,7 +1007,7 @@ const CreateQuote: React.FC = () => {
   if (loading) {
     return (
       <div className="create-quote-container" style={{ textAlign: 'center', paddingTop: '100px' }}>
-        <Spin size="large" tip="正在加载新建报价单基础数据..." />
+        <Spin size="large" tip="正在加载发起报价单基础数据..." />
       </div>
     );
   }

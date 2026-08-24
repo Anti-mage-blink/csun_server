@@ -7,7 +7,7 @@ import (
 	quote_query "csun_server-backend/dao/query/quote_manage"
 )
 
-// MyApplyQueryResult 定义我的申请查询结果的数据结构
+// MyApplyQueryResult 定义我的发起查询结果的数据结构
 type MyApplyQueryResult struct {
 	Quotes            []*quote_manage.Quote            `json:"quotes"`
 	QuoteItems        []*quote_manage.AQuoteItem       `json:"quote_items"`
@@ -15,7 +15,7 @@ type MyApplyQueryResult struct {
 	QuoteProcessNodes []*quote_manage.QuoteProcessNode `json:"quote_process_nodes"`
 }
 
-// MyApplyQueryService 我的申请查询服务接口
+// MyApplyQueryService 我的发起查询服务接口
 type MyApplyQueryService interface {
 	MyApplyQuery(ctx context.Context, userID int32) (*MyApplyQueryResult, error)
 }
