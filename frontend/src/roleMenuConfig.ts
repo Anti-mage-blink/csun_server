@@ -24,7 +24,7 @@ export const ROLE_FUNCTIONS_MAP: Record<string, string[]> = {
   '领导小组副组长': ['/my-approvals', '/filing'],
   '工作小组组长-光伏热场': ['/my-approvals'],
   '工作小组组长-摩擦': ['/my-approvals'],
-  '上帝': ['/create-quote', '/filing', '/my-applications', '/my-approvals', '/product-manage', '/test-page'],
+  '系统管理员': ['/create-quote', '/my-applications', '/my-approvals', '/filing', '/product-manage', '/test-page'],
 }
 
 /**

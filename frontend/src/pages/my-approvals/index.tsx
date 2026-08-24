@@ -29,7 +29,7 @@ const MyApprovals: React.FC = () => {
   // 判断是否为审批角色
   const isApproverRole = (role: string | undefined): boolean => {
     if (!role) return false
-    const approverRoles = ['工作小组组长-光伏热场', '工作小组组长-摩擦', '领导小组副组长', '领导小组组长', '组长', '副组长', '管理员', '上帝']
+    const approverRoles = ['工作小组组长-光伏热场', '工作小组组长-摩擦', '领导小组副组长', '领导小组组长', '组长', '副组长', '系统管理员']
     return approverRoles.includes(role)
   }
 

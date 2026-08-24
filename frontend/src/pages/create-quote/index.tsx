@@ -828,7 +828,7 @@ const CreateQuote: React.FC = () => {
   // 9. 渲染表格列定义 (直接映射对应行的物理字段属性，通过 updateRow 触发状态修改)
   const columns = [
     {
-      title: '产品名称 *',
+      title: <span>产品名称 <span style={{ color: '#ff4d4f' }}>*</span></span>,
       dataIndex: 'product_name',
       key: 'product_name',
       width: 200,
@@ -893,7 +893,7 @@ const CreateQuote: React.FC = () => {
       ),
     },
     {
-      title: '批量档位 *',
+      title: <span>批量档位 <span style={{ color: '#ff4d4f' }}>*</span></span>,
       dataIndex: 'order_batch_tier',
       key: 'order_batch_tier',
       width: 180,
@@ -943,7 +943,7 @@ const CreateQuote: React.FC = () => {
       },
     },
     {
-      title: '报价单价 *',
+      title: <span>报价单价 <span style={{ color: '#ff4d4f' }}>*</span></span>,
       dataIndex: 'quote_unit_price',
       key: 'quote_unit_price',
       width: 130,
@@ -960,7 +960,7 @@ const CreateQuote: React.FC = () => {
       ),
     },
     {
-      title: '数量 *',
+      title: <span>数量 <span style={{ color: '#ff4d4f' }}>*</span></span>,
       dataIndex: 'quantity',
       key: 'quantity',
       width: 140,
@@ -1036,7 +1036,7 @@ const CreateQuote: React.FC = () => {
             </Col>
 
             <Col xs={24} sm={12} md={6}>
-              <Form.Item label="客户名称 *" className="custom-form-item">
+              <Form.Item label={<span>客户名称 <span style={{ color: '#ff4d4f' }}>*</span></span>} className="custom-form-item">
                 <DropdownMenu
                   records={uniqueCustomers}
                   displayField="company_name"
@@ -1100,7 +1100,7 @@ const CreateQuote: React.FC = () => {
           {/* 第三行 */}
           <Row gutter={24} className="form-row">
             <Col xs={24} sm={12} md={12}>
-              <Form.Item label="付款方式 *" className="custom-form-item">
+              <Form.Item label={<span>付款方式 <span style={{ color: '#ff4d4f' }}>*</span></span>} className="custom-form-item">
                 <Space>
                   {['银行转账', '银承', '商票'].map((way) => (
                     <Button
@@ -1116,7 +1116,7 @@ const CreateQuote: React.FC = () => {
             </Col>
 
             <Col xs={24} sm={12} md={12}>
-              <Form.Item label="账期 *" className="custom-form-item">
+              <Form.Item label={<span>账期 <span style={{ color: '#ff4d4f' }}>*</span></span>} className="custom-form-item">
                 <Input
                   placeholder="请输入账期 (如: 30天 / 收到发票后30天)"
                   value={quote?.credit_period || ''}

@@ -174,7 +174,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             </p>
             
             <div style={{ marginBottom: '24px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>您的账号 *</label>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>您的账号 <span style={{ color: '#ff4d4f' }}>*</span></label>
               <Select
                 placeholder="-- 请选择需要重置密码的账号 --"
                 style={{ width: '100%', height: '40px' }}
