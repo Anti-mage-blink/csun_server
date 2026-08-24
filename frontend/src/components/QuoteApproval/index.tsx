@@ -397,7 +397,7 @@ const QuoteApproval: React.FC<QuoteApprovalProps> = ({
           <div className="header-bar">
             <Title level={4}>
               <FileTextOutlined className="icon-margin" /> {displayTitle}
-              <span className="total-badge">{filteredProcesses.length}</span>
+              <span className="total-badge">{pendingProcesses.length}</span>
             </Title>
             {onRefresh && (
               <Button type="default" onClick={onRefresh} loading={loading}>

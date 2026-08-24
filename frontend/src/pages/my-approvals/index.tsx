@@ -14,7 +14,7 @@ import Feedback from '@/components/Feedback'
 import './index.css'
 
 const MyApprovals: React.FC = () => {
-  const { user } = useAuth()
+  const { user, fetchPendingCount } = useAuth()
   
   // 状态管理
   const [loading, setLoading] = useState<boolean>(false)
@@ -48,6 +48,7 @@ const MyApprovals: React.FC = () => {
       if (!active) return
       Feedback.handle(res, undefined, '获取待审批列表失败')
       setData(res.data)
+      fetchPendingCount()
     } catch (err: any) {
       if (!active) return
       Feedback.handle(err, undefined, '获取待审批列表失败')

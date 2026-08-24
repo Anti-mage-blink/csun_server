@@ -19,11 +19,30 @@ interface AppLayoutProps {
 const AppLayout = ({ children }: AppLayoutProps) => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { user, logout } = useAuth()
+  const { user, logout, pendingCount } = useAuth()
   const [collapsed, setCollapsed] = useState(false)
 
   // 读取当前登录用户，根据角色功能映射给出功能子页面（顺序符合映射列表顺序）
-  const menuItems = getMenuItemsByRole(user?.role)
+  const baseMenuItems = getMenuItemsByRole(user?.role)
+
+  const menuItems = baseMenuItems.map((item) => {
+    if (item && item.key === '/my-approvals') {
+      return {
+        ...item,
+        label: (
+          <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+            <span>我的审批</span>
+            {typeof pendingCount === 'number' && pendingCount > 0 && (
+              <span className={styles.menuBadge}>
+                {pendingCount > 99 ? '99+' : pendingCount}
+              </span>
+            )}
+          </span>
+        ),
+      }
+    }
+    return item
+  })
 
   const handleLogout = () => {
     logout()
