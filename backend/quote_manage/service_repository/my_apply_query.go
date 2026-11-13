@@ -5,6 +5,7 @@ import (
 
 	"csun_server-backend/dao/model/quote_manage"
 	quote_query "csun_server-backend/dao/query/quote_manage"
+	general_service "csun_server-backend/general/service_repository"
 )
 
 // MyApplyQueryResult 定义我的发起查询结果的数据结构
@@ -28,7 +29,7 @@ type myApplyQueryRepository interface {
 }
 
 type defaultMyApplyQueryRepository struct {
-	db *DBEngine
+	db *general_service.DBEngine
 }
 
 func (r *defaultMyApplyQueryRepository) GetQuotesByCreatorID(ctx context.Context, creatorID int32) ([]*quote_manage.Quote, error) {
@@ -64,7 +65,7 @@ type myApplyQueryService struct {
 	repo myApplyQueryRepository
 }
 
-func NewMyApplyQueryService(db *DBEngine) MyApplyQueryService {
+func NewMyApplyQueryService(db *general_service.DBEngine) MyApplyQueryService {
 	return &myApplyQueryService{
 		repo: &defaultMyApplyQueryRepository{db: db},
 	}

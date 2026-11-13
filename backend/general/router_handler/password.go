@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"csun_server-backend/service_repository"
+	"csun_server-backend/general/service_repository"
 
 	"github.com/gin-gonic/gin"
 )

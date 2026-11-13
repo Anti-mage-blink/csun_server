@@ -11,6 +11,7 @@ import (
 	"csun_server-backend/dao/model/quote_manage"
 	general_query "csun_server-backend/dao/query/general"
 	quote_query "csun_server-backend/dao/query/quote_manage"
+	general_service "csun_server-backend/general/service_repository"
 	"csun_server-backend/utils"
 
 	"gorm.io/gorm"
@@ -37,7 +38,7 @@ type createQuoteRepository interface {
 }
 
 type defaultCreateQuoteRepository struct {
-	db *DBEngine
+	db *general_service.DBEngine
 }
 
 func (r *defaultCreateQuoteRepository) GetMaxQuoteCodeByPrefix(ctx context.Context, prefix string) (*string, error) {
@@ -264,7 +265,7 @@ type createQuoteService struct {
 	repo createQuoteRepository
 }
 
-func NewCreateQuoteService(db *DBEngine) CreateQuoteService {
+func NewCreateQuoteService(db *general_service.DBEngine) CreateQuoteService {
 	return &createQuoteService{
 		repo: &defaultCreateQuoteRepository{db: db},
 	}

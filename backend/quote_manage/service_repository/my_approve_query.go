@@ -5,6 +5,7 @@ import (
 
 	"csun_server-backend/dao/model/quote_manage"
 	quote_query "csun_server-backend/dao/query/quote_manage"
+	general_service "csun_server-backend/general/service_repository"
 )
 
 // MyApproveQueryResult 定义我的审批查询结果的数据结构
@@ -30,7 +31,7 @@ type myApproveQueryRepository interface {
 }
 
 type defaultMyApproveQueryRepository struct {
-	db *DBEngine
+	db *general_service.DBEngine
 }
 
 func (r *defaultMyApproveQueryRepository) GetNodesByApproverID(ctx context.Context, approverID int32) ([]*quote_manage.QuoteProcessNode, error) {
@@ -85,7 +86,7 @@ type myApproveQueryService struct {
 	repo myApproveQueryRepository
 }
 
-func NewMyApproveQueryService(db *DBEngine) MyApproveQueryService {
+func NewMyApproveQueryService(db *general_service.DBEngine) MyApproveQueryService {
 	return &myApproveQueryService{
 		repo: &defaultMyApproveQueryRepository{db: db},
 	}

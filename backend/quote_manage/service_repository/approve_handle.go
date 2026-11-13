@@ -8,6 +8,7 @@ import (
 
 	"csun_server-backend/dao/model/quote_manage"
 	quote_query "csun_server-backend/dao/query/quote_manage"
+	general_service "csun_server-backend/general/service_repository"
 	"csun_server-backend/utils"
 
 	"gorm.io/gorm"
@@ -34,7 +35,7 @@ type approveHandleRepository interface {
 }
 
 type defaultApproveHandleRepository struct {
-	db *DBEngine
+	db *general_service.DBEngine
 }
 
 func (r *defaultApproveHandleRepository) UpdateNodeAndProcessStatus(ctx context.Context, params *ApproveHandleRequestParams) error {
@@ -197,7 +198,7 @@ type approveHandleService struct {
 }
 
 // NewApproveHandleService创建默认审批处理服务
-func NewApproveHandleService(db *DBEngine) ApproveHandleService {
+func NewApproveHandleService(db *general_service.DBEngine) ApproveHandleService {
 	return &approveHandleService{
 		repo: &defaultApproveHandleRepository{db: db},
 	}

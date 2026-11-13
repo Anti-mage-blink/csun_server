@@ -3,7 +3,7 @@ package router_handler
 import (
 	"net/http"
 
-	"csun_server-backend/service_repository"
+	"csun_server-backend/quote_manage/service_repository"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,7 +20,7 @@ func NewApproveHandleHandler(service service_repository.ApproveHandleService) *A
 
 // RegisterApproveHandleRoutes 注册审批处理相关的路由
 func RegisterApproveHandleRoutes(r *gin.Engine, h *ApproveHandleHandler) {
-	api := r.Group("/api")
+	api := r.Group("/api/quote_manage")
 	{
 		api.POST("/approve/approve_handle", h.ApproveHandle)
 	}

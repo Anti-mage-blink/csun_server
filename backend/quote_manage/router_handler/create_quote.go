@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"csun_server-backend/dao/model/quote_manage"
-	"csun_server-backend/service_repository"
+	"csun_server-backend/quote_manage/service_repository"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,7 +20,7 @@ func NewCreateQuoteHandler(createQuoteService service_repository.CreateQuoteServ
 }
 
 func RegisterCreateQuoteRoutes(r *gin.Engine, createQuoteHandler *CreateQuoteHandler) {
-	api := r.Group("/api")
+	api := r.Group("/api/quote_manage")
 	{
 		api.GET("/quote/create", createQuoteHandler.PrepareCreateQuote)
 		api.POST("/quote/submit", createQuoteHandler.SubmitQuote)

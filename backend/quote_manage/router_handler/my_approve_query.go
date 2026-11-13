@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"csun_server-backend/service_repository"
+	"csun_server-backend/quote_manage/service_repository"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,7 +21,7 @@ func NewMyApproveQueryHandler(service service_repository.MyApproveQueryService) 
 
 // RegisterMyApproveQueryRoutes 注册待审批查询相关的路由
 func RegisterMyApproveQueryRoutes(r *gin.Engine, h *MyApproveQueryHandler) {
-	api := r.Group("/api")
+	api := r.Group("/api/quote_manage")
 	{
 		api.GET("/approve/my_approve_query", h.MyApproveQuery)
 	}

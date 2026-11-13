@@ -8,8 +8,12 @@ import (
 	"time"
 	_ "time/tzdata"
 
-	"csun_server-backend/router_handler"
-	"csun_server-backend/service_repository"
+	general_handler "csun_server-backend/general/router_handler"
+	general_service "csun_server-backend/general/service_repository"
+	hr_handler "csun_server-backend/hr_sync/router_handler"
+	hr_service "csun_server-backend/hr_sync/service_repository"
+	quote_handler "csun_server-backend/quote_manage/router_handler"
+	quote_service "csun_server-backend/quote_manage/service_repository"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
@@ -80,71 +84,74 @@ func main() {
 		log.Fatalf("GORM 初始化失败: %v", err)
 	}
 
-	dbEngine := &service_repository.DBEngine{
+	dbEngine := &general_service.DBEngine{
 		General:     globalDB,
 		Product:     globalDB,
 		QuoteManage: globalDB,
 	}
 
+	// ==================== 通用基础模块 (general) ====================
 	// 初始化 Auth 依赖链
-	authService := service_repository.NewAuthService(dbEngine.General)
-	authHandler := router_handler.NewAuthHandler(authService)
+	authService := general_service.NewAuthService(dbEngine.General)
+	authHandler := general_handler.NewAuthHandler(authService)
 
 	// 初始化 Password 依赖链
-	passwordService := service_repository.NewPasswordService(dbEngine.General)
-	passwordHandler := router_handler.NewPasswordHandler(passwordService)
-
-	// 初始化 CreateQuote 依赖链
-	createQuoteService := service_repository.NewCreateQuoteService(dbEngine)
-	createQuoteHandler := router_handler.NewCreateQuoteHandler(createQuoteService)
-
-	// 初始化 MyApproveQuery 依赖链
-	myApproveQueryService := service_repository.NewMyApproveQueryService(dbEngine)
-	myApproveQueryHandler := router_handler.NewMyApproveQueryHandler(myApproveQueryService)
-
-	// 初始化 FilingLook 依赖链
-	filingLookService := service_repository.NewFilingLookService(dbEngine)
-	filingLookHandler := router_handler.NewFilingLookHandler(filingLookService)
-
-	// 初始化 MyApplyQuery 依赖链
-	myApplyQueryService := service_repository.NewMyApplyQueryService(dbEngine)
-	myApplyQueryHandler := router_handler.NewMyApplyQueryHandler(myApplyQueryService)
-
-	// 初始化 ApproveHandle 依赖链
-	approveHandleService := service_repository.NewApproveHandleService(dbEngine)
-	approveHandleHandler := router_handler.NewApproveHandleHandler(approveHandleService)
-
-	// 初始化 WithdrawQuote 依赖链
-	withdrawQuoteService := service_repository.NewWithdrawQuoteService(dbEngine)
-	withdrawQuoteHandler := router_handler.NewWithdrawQuoteHandler(withdrawQuoteService)
+	passwordService := general_service.NewPasswordService(dbEngine.General)
+	passwordHandler := general_handler.NewPasswordHandler(passwordService)
 
 	// 初始化 DataTable 依赖链
-	dataTableService := service_repository.NewDataTableService(dbEngine)
-	dataTableHandler := router_handler.NewDataTableHandler(dataTableService)
+	dataTableService := general_service.NewDataTableService(dbEngine)
+	dataTableHandler := general_handler.NewDataTableHandler(dataTableService)
+
+	// ==================== 报价管理应用 (quote_manage) ====================
+	// 初始化 CreateQuote 依赖链
+	createQuoteService := quote_service.NewCreateQuoteService(dbEngine)
+	createQuoteHandler := quote_handler.NewCreateQuoteHandler(createQuoteService)
+
+	// 初始化 MyApproveQuery 依赖链
+	myApproveQueryService := quote_service.NewMyApproveQueryService(dbEngine)
+	myApproveQueryHandler := quote_handler.NewMyApproveQueryHandler(myApproveQueryService)
+
+	// 初始化 FilingLook 依赖链
+	filingLookService := quote_service.NewFilingLookService(dbEngine)
+	filingLookHandler := quote_handler.NewFilingLookHandler(filingLookService)
+
+	// 初始化 MyApplyQuery 依赖链
+	myApplyQueryService := quote_service.NewMyApplyQueryService(dbEngine)
+	myApplyQueryHandler := quote_handler.NewMyApplyQueryHandler(myApplyQueryService)
+
+	// 初始化 ApproveHandle 依赖链
+	approveHandleService := quote_service.NewApproveHandleService(dbEngine)
+	approveHandleHandler := quote_handler.NewApproveHandleHandler(approveHandleService)
+
+	// 初始化 WithdrawQuote 依赖链
+	withdrawQuoteService := quote_service.NewWithdrawQuoteService(dbEngine)
+	withdrawQuoteHandler := quote_handler.NewWithdrawQuoteHandler(withdrawQuoteService)
+
+	// ==================== 人事同步应用 (hr_sync) ====================
+	// 初始化 Callback 依赖链
+	hrCallbackService := hr_service.NewCallbackService(dbEngine)
+	hrCallbackHandler := hr_handler.NewCallbackHandler(hrCallbackService)
 
 	// gin.Default() 创建一个带 Logger 与 Recovery 中间件的引擎
 	r := gin.Default()
 
-	// 注册 Auth 路由
-	router_handler.RegisterAuthRoutes(r, authHandler)
-	// 注册 Password 路由
-	router_handler.RegisterPasswordRoutes(r, passwordHandler)
-	// 注册 CreateQuote 路由
-	router_handler.RegisterCreateQuoteRoutes(r, createQuoteHandler)
-	// 注册 MyApproveQuery 路由
-	router_handler.RegisterMyApproveQueryRoutes(r, myApproveQueryHandler)
-	// 注册 FilingLook 路由
-	router_handler.RegisterFilingLookRoutes(r, filingLookHandler)
-	// 注册 MyApplyQuery 路由
-	router_handler.RegisterMyApplyQueryRoutes(r, myApplyQueryHandler)
-	// 注册 ApproveHandle 路由
-	router_handler.RegisterApproveHandleRoutes(r, approveHandleHandler)
-	// 注册 WithdrawQuote 路由
-	router_handler.RegisterWithdrawQuoteRoutes(r, withdrawQuoteHandler)
-	// 注册 DataTable 路由
-	router_handler.RegisterDataTableRoutes(r, dataTableHandler)
-	// 注册 COS 附件路由
-	router_handler.RegisterCOSRoutes(r)
+	// 注册通用模块 (general) 路由
+	general_handler.RegisterAuthRoutes(r, authHandler)
+	general_handler.RegisterPasswordRoutes(r, passwordHandler)
+	general_handler.RegisterDataTableRoutes(r, dataTableHandler)
+	general_handler.RegisterCOSRoutes(r)
+
+	// 注册报价管理应用 (quote_manage) 路由
+	quote_handler.RegisterCreateQuoteRoutes(r, createQuoteHandler)
+	quote_handler.RegisterMyApproveQueryRoutes(r, myApproveQueryHandler)
+	quote_handler.RegisterFilingLookRoutes(r, filingLookHandler)
+	quote_handler.RegisterMyApplyQueryRoutes(r, myApplyQueryHandler)
+	quote_handler.RegisterApproveHandleRoutes(r, approveHandleHandler)
+	quote_handler.RegisterWithdrawQuoteRoutes(r, withdrawQuoteHandler)
+
+	// 注册人事同步应用 (hr_sync) 路由
+	hr_handler.RegisterCallbackRoutes(r, hrCallbackHandler)
 
 	// 根路由：返回 JSON 格式的 Hello World
 	r.GET("/", func(c *gin.Context) {

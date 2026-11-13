@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"csun_server-backend/service_repository"
+	"csun_server-backend/quote_manage/service_repository"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,7 +21,7 @@ func NewMyApplyQueryHandler(service service_repository.MyApplyQueryService) *MyA
 
 // RegisterMyApplyQueryRoutes 注册我的发起查询相关的路由
 func RegisterMyApplyQueryRoutes(r *gin.Engine, h *MyApplyQueryHandler) {
-	api := r.Group("/api")
+	api := r.Group("/api/quote_manage")
 	{
 		api.GET("/apply/my_apply_query", h.MyApplyQuery)
 	}

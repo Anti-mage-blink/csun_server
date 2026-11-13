@@ -3,7 +3,7 @@ package router_handler
 import (
 	"net/http"
 
-	"csun_server-backend/service_repository"
+	"csun_server-backend/quote_manage/service_repository"
 
 	"github.com/gin-gonic/gin"
 )
@@ -35,7 +35,7 @@ func NewWithdrawQuoteHandler(service service_repository.WithdrawQuoteService) *W
 
 // RegisterWithdrawQuoteRoutes 注册撤回报价单相关的路由
 func RegisterWithdrawQuoteRoutes(r *gin.Engine, h *WithdrawQuoteHandler) {
-	api := r.Group("/api")
+	api := r.Group("/api/quote_manage")
 	{
 		api.POST("/quote/withdraw_quote", h.WithdrawQuote)
 		api.POST("/withdraw_quote", h.WithdrawQuote) // 兼容别名路由

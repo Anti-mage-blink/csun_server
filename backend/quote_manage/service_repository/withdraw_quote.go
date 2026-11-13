@@ -8,6 +8,7 @@ import (
 	"csun_server-backend/dao/model/quote_manage"
 	general_query "csun_server-backend/dao/query/general"
 	quote_query "csun_server-backend/dao/query/quote_manage"
+	general_service "csun_server-backend/general/service_repository"
 
 	"gorm.io/gorm"
 )
@@ -29,7 +30,7 @@ type withdrawQuoteRepository interface {
 }
 
 type defaultWithdrawQuoteRepository struct {
-	db *DBEngine
+	db *general_service.DBEngine
 }
 
 func (r *defaultWithdrawQuoteRepository) WithdrawQuote(ctx context.Context, params *WithdrawQuoteRequestParams) error {
@@ -117,7 +118,7 @@ type withdrawQuoteService struct {
 }
 
 // NewWithdrawQuoteService 创建默认撤回报价单服务
-func NewWithdrawQuoteService(db *DBEngine) WithdrawQuoteService {
+func NewWithdrawQuoteService(db *general_service.DBEngine) WithdrawQuoteService {
 	return &withdrawQuoteService{
 		repo: &defaultWithdrawQuoteRepository{db: db},
 	}

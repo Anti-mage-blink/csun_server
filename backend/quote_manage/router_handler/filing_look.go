@@ -3,7 +3,7 @@ package router_handler
 import (
 	"net/http"
 
-	"csun_server-backend/service_repository"
+	"csun_server-backend/quote_manage/service_repository"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,7 +20,7 @@ func NewFilingLookHandler(service service_repository.FilingLookService) *FilingL
 
 // RegisterFilingLookRoutes 注册备案查看相关的路由
 func RegisterFilingLookRoutes(r *gin.Engine, h *FilingLookHandler) {
-	api := r.Group("/api")
+	api := r.Group("/api/quote_manage")
 	{
 		api.GET("/filing/filing_look", h.FilingLook)
 	}

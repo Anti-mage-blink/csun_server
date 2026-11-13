@@ -5,6 +5,7 @@ import (
 
 	"csun_server-backend/dao/model/quote_manage"
 	quote_query "csun_server-backend/dao/query/quote_manage"
+	general_service "csun_server-backend/general/service_repository"
 )
 
 // FilingLookResult 定义备案查看结果的数据结构
@@ -28,7 +29,7 @@ type filingLookRepository interface {
 }
 
 type defaultFilingLookRepository struct {
-	db *DBEngine
+	db *general_service.DBEngine
 }
 
 func (r *defaultFilingLookRepository) GetValidProcesses(ctx context.Context) ([]*quote_manage.QuoteProcess, error) {
@@ -72,7 +73,7 @@ type filingLookService struct {
 	repo filingLookRepository
 }
 
-func NewFilingLookService(db *DBEngine) FilingLookService {
+func NewFilingLookService(db *general_service.DBEngine) FilingLookService {
 	return &filingLookService{
 		repo: &defaultFilingLookRepository{db: db},
 	}

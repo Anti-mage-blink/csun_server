@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"csun_server-backend/dao/model/quote_manage"
-	"csun_server-backend/service_repository"
+	"csun_server-backend/quote_manage/service_repository"
 
 	"github.com/gin-gonic/gin"
 )
@@ -52,14 +52,14 @@ func TestSubmitQuoteHandler(t *testing.T) {
 		}
 
 		jsonBytes, _ := json.Marshal(reqBody)
-		req := httptest.NewRequest(http.MethodPost, "/api/quote/submit", bytes.NewBuffer(jsonBytes))
+		req := httptest.NewRequest(http.MethodPost, "/api/quote_manage/quote/submit", bytes.NewBuffer(jsonBytes))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 
 		h := NewCreateQuoteHandler(&mockCreateQuoteServiceWrapper{})
 
 		r := gin.New()
-		r.POST("/api/quote/submit", h.SubmitQuote)
+		RegisterCreateQuoteRoutes(r, h)
 
 		r.ServeHTTP(w, req)
 
